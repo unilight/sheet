@@ -22,7 +22,6 @@ Same as many speech processing based repositories ([ESPNet](https://github.com/e
 
 Currently we support the following datasets:
 
-
 - BVCC
     - Dataset download link: https://zenodo.org/records/6572573
     - Paper link: [[Original paper](https://arxiv.org/abs/2105.02373)] [[VoiceMOS Challenge 2022](https://arxiv.org/abs/2203.11389)]
@@ -31,6 +30,7 @@ Currently we support the following datasets:
 We plan to support the following datasets in the future:
 
 - SOMOS
+- NISQA
 
 ## Supported Models
 
@@ -40,13 +40,26 @@ Currently we support the following models:
     - Original repo link: https://github.com/unilight/LDNet
     - Paper link: [[arXiv](https://arxiv.org/abs/2110.09103)]
     - Example config: `egs/bvcc/conf/ldnet-ml.yaml`
+- SSL-MOS
+    - Original repo link: https://github.com/nii-yamagishilab/mos-finetune-ssl/tree/main
+    - Paper link: [[arXiv](https://arxiv.org/abs/2110.02635)]
+    - Example config: `egs/bvcc/conf/ssl-mos-wav2vec2.yaml`
 
 We plan to support the following models in the future:
 
-- SSL-MOS
 - UTMOS
 
 or, support some model that mixes core techniques in the models above.
+
+## Supported Features
+
+- Modeling
+    - Listener modeling
+    - Self-supervised learning (SSL) based encoder
+- Training
+    - Automatic best-n model saving and early stopiing based on given validation criterion
+    - Visualization, including predicted score distribution, scatter plot of utterance and system level scores
+
 
 ## Acknowledgements
 

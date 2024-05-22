@@ -58,12 +58,16 @@ class Trainer(object):
         self.device = device
         self.writer = SummaryWriter(config["outdir"])
         self.finish_train = False
+
         self.total_train_loss = defaultdict(float)
         self.total_eval_loss = defaultdict(float)
-
         self.reset_eval_results()
 
         self.gradient_accumulate_steps = self.config.get("gradient_accumulate_steps", 1)
+
+        self.reporter = list() # each element is [steps: int, results: dict]
+        self.original_patience = self.config.get("patience", None)
+        self.current_patience = self.config.get("patience", None)
 
     def run(self):
         """Run training."""
@@ -92,10 +96,12 @@ class Trainer(object):
         """
         state_dict = {
             "optimizer": self.optimizer.state_dict(),
-            "scheduler": self.scheduler.state_dict(),
             "steps": self.steps,
             "epochs": self.epochs,
         }
+        if self.scheduler is not None:
+            state_dict["scheduler"] = self.scheduler.state_dict()
+
         if self.config["distributed"]:
             state_dict["model"] = self.model.module.state_dict()
         else:
@@ -122,7 +128,8 @@ class Trainer(object):
             self.steps = state_dict["steps"]
             self.epochs = state_dict["epochs"]
             self.optimizer.load_state_dict(state_dict["optimizer"])
-            self.scheduler.load_state_dict(state_dict["scheduler"])
+            if self.scheduler is not None:
+                self.scheduler.load_state_dict(state_dict["scheduler"])
 
     def _train_step(self, batch):
         """Train model one step."""
@@ -144,8 +151,7 @@ class Trainer(object):
             # check interval
             if self.config["rank"] == 0:
                 self._check_log_interval()
-                self._check_eval_interval()
-                self._check_save_interval()
+                self._check_eval_and_save_interval()
 
             # check whether training is finished
             if self.finish_train:
@@ -168,8 +174,8 @@ class Trainer(object):
         """Evaluate model one step."""
         pass
 
-    def _eval_epoch(self):
-        """Evaluate model one epoch."""
+    def _eval(self):
+        """Evaluate model with dev set."""
         logging.info(f"(Steps: {self.steps}) Start evaluation.")
         # change mode
         self.model.eval()
@@ -184,15 +190,6 @@ class Trainer(object):
             f"({time.time() - start_time} secs)."
         )
 
-        # save figures
-        self._log_metrics_and_save_figures()
-
-        # reset
-        self.reset_eval_results()
-
-        # restore mode
-        self.model.train()
-
     @torch.no_grad()
     def _log_metrics_and_save_figures(self):
         """Log metrics and save figures."""
@@ -203,16 +200,54 @@ class Trainer(object):
         for key, value in loss.items():
             self.writer.add_scalar(key, value, self.steps)
 
-    def _check_save_interval(self):
-        if self.steps % self.config["save_interval_steps"] == 0:
-            self.save_checkpoint(
-                os.path.join(self.config["outdir"], f"checkpoint-{self.steps}steps.pkl")
-            )
-            logging.info(f"Successfully saved checkpoint @ {self.steps} steps.")
+    def _check_eval_and_save_interval(self):
+        if self.steps % self.config["eval_and_save_interval_steps"] == 0:
+            # run evaluation on dev set
+            self._eval()
 
-    def _check_eval_interval(self):
-        if self.steps % self.config["eval_interval_steps"] == 0:
-            self._eval_epoch()
+            # get metrics and save figures
+            self._log_metrics_and_save_figures()
+
+            # get best n steps
+            best_n_steps = self.get_and_show_best_n_models()
+
+            # save current if in best n
+            if self.steps in best_n_steps:
+                current_checkpoint_path = os.path.join(self.config["outdir"], f"checkpoint-{self.steps}steps.pkl")
+                self.save_checkpoint(current_checkpoint_path)
+                logging.info(f"Saved checkpoint @ {self.steps} steps because it is in best {self.config['keep_nbest_models']}.")
+                
+                # retstore patience
+                if self.original_patience is not None:
+                    self.current_patience = self.original_patience
+                    logging.info(f"Restoring patience to {self.original_patience}.")
+            else:
+                # minus patience
+                if self.current_patience is not None:
+                    self.current_patience -= 1
+                    logging.info(f"Reducing patience to {self.current_patience}.")
+
+            # if current is best, link to best
+            if self.steps == best_n_steps[0]:
+                best_checkpoint_path = os.path.join(self.config["outdir"], f"checkpoint-best.pkl")
+                if os.path.islink(best_checkpoint_path) or os.path.exists(best_checkpoint_path):
+                    os.remove(best_checkpoint_path)
+                os.symlink(current_checkpoint_path, best_checkpoint_path)
+                logging.info(f"Updated best checkpoint to {self.steps} steps.")
+
+            # delete those not in best n
+            existing_checkpoint_paths = [fname for fname in os.listdir(self.config["outdir"]) if os.path.isfile(os.path.join(self.config["outdir"], fname)) and fname.endswith("steps.pkl")]
+            for checkpoint_path in existing_checkpoint_paths:
+                steps = int(checkpoint_path.replace("steps.pkl", "").replace("checkpoint-", ""))
+                if steps not in best_n_steps:
+                    os.remove(os.path.join(self.config["outdir"], checkpoint_path))
+                    logging.info(f"Deleting checkpoint @ {steps} steps.")
+
+            # reset
+            self.reset_eval_results()
+
+            # restore mode
+            self.model.train()
 
     def _check_log_interval(self):
         if self.steps % self.config["log_interval_steps"] == 0:
@@ -230,9 +265,30 @@ class Trainer(object):
         if self.steps >= self.config["train_max_steps"]:
             self.finish_train = True
 
+        if self.current_patience is not None and self.current_patience <= 0:
+            self.finish_train = True
+            
+
     def freeze_modules(self, modules):
         freeze_modules(self.model, modules)
 
     def reset_eval_results(self):
         self.eval_results = defaultdict(list)
         self.eval_sys_results = defaultdict(lambda: defaultdict(list))
+
+    def get_and_show_best_n_models(self):
+        # sort according to key
+        best_n = sorted(self.reporter, key=lambda x: x[1][self.config["best_model_criterion"]["key"]])
+        if self.config["best_model_criterion"]["order"] == "highest": # reverse if highest
+            best_n.reverse()
+        
+        # log the results
+        logging.info(f"Best {self.config['keep_nbest_models']} models at step {self.steps}:")
+        log_string="; ".join(
+            f"{i+1}. {steps} steps: {self.config['best_model_criterion']['key']}={results[self.config['best_model_criterion']['key']]:.4f}"
+            for i, (steps, results) in enumerate(best_n[:self.config["keep_nbest_models"]])
+        )
+        logging.info(log_string)
+        
+        # only return the steps
+        return [steps for steps, _ in best_n[:self.config["keep_nbest_models"]]]

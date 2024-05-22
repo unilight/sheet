@@ -1,6 +1,6 @@
 PYTHON:= python
 CUDA_VERSION:= 12.1
-PYTORCH_VERSION:= 2.2.0
+PYTORCH_VERSION:= 2.3.0
 DOT:= .
 .PHONY: all clean show_variables
 

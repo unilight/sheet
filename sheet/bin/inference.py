@@ -137,10 +137,10 @@ def main():
     model_class = getattr(sheet.models, config["model_type"])
     model = model_class(
         config["model_input"],
-        num_listeners=config["num_listeners"],
+        num_listeners=config.get("num_listeners", None),
         **config["model_params"],
     )
-    model.load_state_dict(torch.load(args.checkpoint, map_location="cpu")["model"])
+    model.load_state_dict(torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"])
     model = model.eval().to(device)
     logging.info(f"Loaded model parameters from {args.checkpoint}.")
 
@@ -154,10 +154,13 @@ def main():
         for batch in pbar:
             # set up model input
             model_input = batch[config["model_input"]].unsqueeze(0).to(device)
+            model_input_lengths = model_input.new_tensor([model_input.size(1)]).long()
 
             # model forward
             if config["inference_mode"] == "mean_listener":
-                outputs = model.mean_listener_inference(model_input)
+                outputs = model.mean_listener_inference(model_input, model_input_lengths)
+            elif config["inference_mode"] == "mean_net":
+                outputs = model.mean_net_inference(model_input, model_input_lengths)
             else:
                 raise NotImplementedError
 
@@ -173,7 +176,7 @@ def main():
     total_inference_time = time.time() - start_time
     logging.info("Total inference time = {} secs.".format(total_inference_time))
     logging.info(
-        "Average inference speed = {:.1f} sec / sample.".format(
+        "Average inference speed = {:.3f} sec / sample.".format(
             total_inference_time / len(dataset)
         )
     )

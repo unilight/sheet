@@ -74,15 +74,22 @@ class NonIntrusiveEstimatorTrainer(Trainer):
             self.device
         )
         gt_scores = batch["scores"].to(self.device)
+        gt_avg_scores = batch["avg_scores"].to(self.device)
         if "listener_idxs" in batch:
             listener_idxs = batch["listener_idxs"].to(self.device)
+        else:
+            listener_idxs = None
 
         # model forward
-        outputs = self.model(model_input, listener_idxs)
+        outputs = self.model(model_input, model_input_lengths, listener_idxs)
 
         # mean loss
         if "mean_score_criterion" in self.criterion:
-            raise NotImplementedError
+            mean_score_loss = self.criterion["mean_score_criterion"](
+                outputs["mean_scores"], gt_avg_scores, model_input_lengths, self.device
+            )
+            gen_loss += mean_score_loss * self.config["mean_score_criterion_weight"]
+            self.total_train_loss["train/mean_score_loss"] += mean_score_loss.item()
 
         # listener loss
         if "listener_score_criterion" in self.criterion:
@@ -103,7 +110,8 @@ class NonIntrusiveEstimatorTrainer(Trainer):
                 self.config["grad_norm"],
             )
         self.optimizer.step()
-        self.scheduler.step()
+        if self.scheduler is not None:
+            self.scheduler.step()
 
         # update counts
         self.steps += 1
@@ -115,10 +123,15 @@ class NonIntrusiveEstimatorTrainer(Trainer):
 
         # set up model input
         model_input = batch[self.config["model_input"]].to(self.device)
+        model_input_lengths = batch[self.config["model_input"] + "_lengths"].to(
+            self.device
+        )
 
         # model forward
         if self.config["inference_mode"] == "mean_listener":
-            outputs = self.model.mean_listener_inference(model_input)
+            outputs = self.model.mean_listener_inference(model_input, model_input_lengths)
+        elif self.config["inference_mode"] == "mean_net":
+            outputs = self.model.mean_net_inference(model_input, model_input_lengths)
 
         # construct the eval_results dict
         pred_mean_scores = outputs["scores"].cpu().detach().numpy()
@@ -164,9 +177,14 @@ class NonIntrusiveEstimatorTrainer(Trainer):
             self.eval_sys_results["true_mean_scores"],
             self.eval_sys_results["pred_mean_scores"],
         )
+
+        # log metrics
         logging.info(
             f'[{self.steps} steps][UTT][ MSE = {results["utt_MSE"]:.3f} | LCC = {results["utt_LCC"]:.3f} | SRCC = {results["utt_SRCC"]:.3f} ] [SYS][ MSE = {results["sys_MSE"]:.3f} | LCC = {results["sys_LCC"]:.4f} | SRCC = {results["sys_SRCC"]:.4f} ]\n'
         )
+
+        # register metrics to reporter
+        self.reporter.append([self.steps, results])
 
         # check directory
         dirname = os.path.join(

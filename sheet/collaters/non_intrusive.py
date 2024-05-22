@@ -8,8 +8,7 @@ import numpy as np
 import torch
 from torch.nn.utils.rnn import pad_sequence
 
-# FEAT_TYPES = ["waveform", "mag_sgram"]
-FEAT_TYPES = ["mag_sgram"]
+FEAT_TYPES = ["waveform", "mag_sgram"]
 
 
 class NonIntrusiveCollater(object):
@@ -47,6 +46,7 @@ class NonIntrusiveCollater(object):
 
         # pad input features (only those in FEAT TYPES)
         for feat_type in FEAT_TYPES:
+            if not feat_type in sorted_batch[0]: continue
 
             feats = [sorted_batch[i][feat_type] for i in range(bs)]
             feat_lengths = torch.from_numpy(np.array([feat.size(0) for feat in feats]))
@@ -62,16 +62,12 @@ class NonIntrusiveCollater(object):
                     dup_times = max_len // this_len
                     remain = max_len - this_len * dup_times
                     to_dup = [feat for t in range(dup_times)]
-                    to_dup.append(feat[:remain, :])
+                    to_dup.append(feat[:remain])
                     duplicated_feat = torch.Tensor(np.concatenate(to_dup, axis=0))
                     feats_padded.append(duplicated_feat)
                 feats_padded = torch.stack(feats_padded, dim=0)
             else:
                 raise NotImplementedError
-
-            # NOTE(unilight) 240513: should we write like this?
-            # items[feat_type] = feats
-            # items[feat_type + "_padded"] = feats_padded
 
             items[feat_type] = feats_padded
             items[feat_type + "_lengths"] = feat_lengths

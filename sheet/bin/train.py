@@ -7,6 +7,7 @@
 """Train model."""
 
 import argparse
+import humanfriendly
 import logging
 import os
 import sys
@@ -183,7 +184,7 @@ def main():
     train_dataset = dataset_class(
         csv_path=args.train_csv_path,
         model_input=config["model_input"],
-        wav_only=False,
+        wav_only=config.get("wav_only", False),
         use_mean_listener=config["model_params"]["use_mean_listener"],
         allow_cache=config["allow_cache"],
     )
@@ -201,7 +202,8 @@ def main():
     }
 
     # update number of listeners
-    config["num_listeners"] = train_dataset.num_listeners
+    if hasattr(train_dataset, "num_listeners"):
+        config["num_listeners"] = train_dataset.num_listeners
 
     # get data loader
     collater_class = getattr(
@@ -254,7 +256,7 @@ def main():
     )
     model = model_class(
         config["model_input"],
-        num_listeners=config["num_listeners"],
+        num_listeners=config.get("num_listeners", None),
         **config["model_params"],
     ).to(device)
 
@@ -279,12 +281,15 @@ def main():
         model.parameters(),
         **config["optimizer_params"],
     )
-    scheduler = get_scheduler(
-        optimizer,
-        config["scheduler_type"],
-        config["train_max_steps"],
-        config["scheduler_params"],
-    )
+    if config["scheduler_type"] is not None:
+        scheduler = get_scheduler(
+            optimizer,
+            config["scheduler_type"],
+            config["train_max_steps"],
+            config["scheduler_params"],
+        )
+    else:
+        scheduler = None
 
     if args.distributed:
         # wrap model for distributed training
@@ -297,6 +302,7 @@ def main():
         model = DistributedDataParallel(model)
 
     # show settings
+    logging.info("Model parameters: {}".format(humanfriendly.format_size(model.get_num_params())))
     logging.info(model)
     logging.info(optimizer)
     logging.info(scheduler)
