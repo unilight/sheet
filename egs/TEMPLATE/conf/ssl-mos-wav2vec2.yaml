@@ -14,8 +14,8 @@ model_input: waveform               # choices: waveform, mag_sgram
 model_type: "SSLMOS"
 model_params:
     ssl_module: "s3prl"
-    s3prl_name: "wav2vec"
-    ssl_model_output_dim: 512
+    s3prl_name: "wav2vec2"
+    ssl_model_output_dim: 768
     ssl_model_layer_idx: -1
 
     mean_net_dnn_dim: 64
@@ -45,7 +45,7 @@ inference_mode: mean_net    # this is used for
 ###########################################################
 #                  DATA LOADER SETTING                    #
 ###########################################################
-train_batch_size: 4
+train_batch_size: 16
 test_batch_size: 1
 padding_mode: "repetitive"  # repetitive, zero_padding
 wav_only: True              # Reduce to average only even for the training data.
@@ -69,7 +69,11 @@ scheduler_type: null
 ###########################################################
 #                    INTERVAL SETTING                     #
 ###########################################################
-train_max_steps: 100000                # Number of training steps.
-save_interval_steps: 1000              # Interval steps to save checkpoint.
-eval_interval_steps: 1000              # Interval steps to evaluate the network.
-log_interval_steps: 100                # Interval steps to record the training log.
+train_max_steps: 100000                 # Number of training steps.
+eval_and_save_interval_steps: 100       # Interval steps to do evaluation and save checkpoint.
+log_interval_steps: 100                 # Interval steps to record the training log.
+keep_nbest_models: 5                    # number of models to keep
+patience: 20                            # patience for early stopping
+best_model_criterion:                   # criterion to save the best models
+    key: sys_SRCC
+    order: highest                      # choices: lowest, highest
