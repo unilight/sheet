@@ -28,6 +28,7 @@ resume=""  # checkpoint path to resume training
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
+model_averaging="False"
                                        
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
@@ -90,17 +91,23 @@ fi
 if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     echo "Stage 3: Inference"
     # shellcheck disable=SC2012
-    [ -z "${checkpoint}" ] && checkpoint="$(ls -dt "${expdir}"/*.pkl | head -1 || true)"
-    outdir="${expdir}/results/$(basename "${checkpoint}" .pkl)"
+    if [ "${model_averaging}" = "True" ]; then
+        outdir="${expdir}/results/model-averaging"
+    else
+        [ -z "${checkpoint}" ] && checkpoint="$(ls -dt "${expdir}"/*.pkl | head -1 || true)"
+        outdir="${expdir}/results/$(basename "${checkpoint}" .pkl)"
+    fi
     for name in "dev" "test"; do
         [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
         [ "${n_gpus}" -gt 1 ] && n_gpus=1
         echo "Inference start. See the progress via ${outdir}/${name}/inference.log."
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
             inference.py \
+                --config "${expdir}/config.yml" \
                 --csv-path "data/${name}.csv" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
+                --model-averaging "${model_averaging}" \
                 --verbose "${verbose}"
         echo "Successfully finished inference of ${name} set."
         grep "UTT" "${outdir}/${name}/inference.log"

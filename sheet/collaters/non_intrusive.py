@@ -46,7 +46,8 @@ class NonIntrusiveCollater(object):
 
         # pad input features (only those in FEAT TYPES)
         for feat_type in FEAT_TYPES:
-            if not feat_type in sorted_batch[0]: continue
+            if not feat_type in sorted_batch[0]:
+                continue
 
             feats = [sorted_batch[i][feat_type] for i in range(bs)]
             feat_lengths = torch.from_numpy(np.array([feat.size(0) for feat in feats]))

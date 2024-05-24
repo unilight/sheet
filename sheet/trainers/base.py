@@ -65,7 +65,7 @@ class Trainer(object):
 
         self.gradient_accumulate_steps = self.config.get("gradient_accumulate_steps", 1)
 
-        self.reporter = list() # each element is [steps: int, results: dict]
+        self.reporter = list()  # each element is [steps: int, results: dict]
         self.original_patience = self.config.get("patience", None)
         self.current_patience = self.config.get("patience", None)
 
@@ -213,10 +213,14 @@ class Trainer(object):
 
             # save current if in best n
             if self.steps in best_n_steps:
-                current_checkpoint_path = os.path.join(self.config["outdir"], f"checkpoint-{self.steps}steps.pkl")
+                current_checkpoint_path = os.path.join(
+                    self.config["outdir"], f"checkpoint-{self.steps}steps.pkl"
+                )
                 self.save_checkpoint(current_checkpoint_path)
-                logging.info(f"Saved checkpoint @ {self.steps} steps because it is in best {self.config['keep_nbest_models']}.")
-                
+                logging.info(
+                    f"Saved checkpoint @ {self.steps} steps because it is in best {self.config['keep_nbest_models']}."
+                )
+
                 # retstore patience
                 if self.original_patience is not None:
                     self.current_patience = self.original_patience
@@ -229,16 +233,27 @@ class Trainer(object):
 
             # if current is best, link to best
             if self.steps == best_n_steps[0]:
-                best_checkpoint_path = os.path.join(self.config["outdir"], f"checkpoint-best.pkl")
-                if os.path.islink(best_checkpoint_path) or os.path.exists(best_checkpoint_path):
+                best_checkpoint_path = os.path.join(
+                    self.config["outdir"], f"checkpoint-best.pkl"
+                )
+                if os.path.islink(best_checkpoint_path) or os.path.exists(
+                    best_checkpoint_path
+                ):
                     os.remove(best_checkpoint_path)
                 os.symlink(current_checkpoint_path, best_checkpoint_path)
                 logging.info(f"Updated best checkpoint to {self.steps} steps.")
 
             # delete those not in best n
-            existing_checkpoint_paths = [fname for fname in os.listdir(self.config["outdir"]) if os.path.isfile(os.path.join(self.config["outdir"], fname)) and fname.endswith("steps.pkl")]
+            existing_checkpoint_paths = [
+                fname
+                for fname in os.listdir(self.config["outdir"])
+                if os.path.isfile(os.path.join(self.config["outdir"], fname))
+                and fname.endswith("steps.pkl")
+            ]
             for checkpoint_path in existing_checkpoint_paths:
-                steps = int(checkpoint_path.replace("steps.pkl", "").replace("checkpoint-", ""))
+                steps = int(
+                    checkpoint_path.replace("steps.pkl", "").replace("checkpoint-", "")
+                )
                 if steps not in best_n_steps:
                     os.remove(os.path.join(self.config["outdir"], checkpoint_path))
                     logging.info(f"Deleting checkpoint @ {steps} steps.")
@@ -267,7 +282,6 @@ class Trainer(object):
 
         if self.current_patience is not None and self.current_patience <= 0:
             self.finish_train = True
-            
 
     def freeze_modules(self, modules):
         freeze_modules(self.model, modules)
@@ -278,17 +292,26 @@ class Trainer(object):
 
     def get_and_show_best_n_models(self):
         # sort according to key
-        best_n = sorted(self.reporter, key=lambda x: x[1][self.config["best_model_criterion"]["key"]])
-        if self.config["best_model_criterion"]["order"] == "highest": # reverse if highest
+        best_n = sorted(
+            self.reporter,
+            key=lambda x: x[1][self.config["best_model_criterion"]["key"]],
+        )
+        if (
+            self.config["best_model_criterion"]["order"] == "highest"
+        ):  # reverse if highest
             best_n.reverse()
-        
+
         # log the results
-        logging.info(f"Best {self.config['keep_nbest_models']} models at step {self.steps}:")
-        log_string="; ".join(
+        logging.info(
+            f"Best {self.config['keep_nbest_models']} models at step {self.steps}:"
+        )
+        log_string = "; ".join(
             f"{i+1}. {steps} steps: {self.config['best_model_criterion']['key']}={results[self.config['best_model_criterion']['key']]:.4f}"
-            for i, (steps, results) in enumerate(best_n[:self.config["keep_nbest_models"]])
+            for i, (steps, results) in enumerate(
+                best_n[: self.config["keep_nbest_models"]]
+            )
         )
         logging.info(log_string)
-        
+
         # only return the steps
-        return [steps for steps, _ in best_n[:self.config["keep_nbest_models"]]]
+        return [steps for steps, _ in best_n[: self.config["keep_nbest_models"]]]

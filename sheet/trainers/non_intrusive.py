@@ -129,7 +129,9 @@ class NonIntrusiveEstimatorTrainer(Trainer):
 
         # model forward
         if self.config["inference_mode"] == "mean_listener":
-            outputs = self.model.mean_listener_inference(model_input, model_input_lengths)
+            outputs = self.model.mean_listener_inference(
+                model_input, model_input_lengths
+            )
         elif self.config["inference_mode"] == "mean_net":
             outputs = self.model.mean_net_inference(model_input, model_input_lengths)
 

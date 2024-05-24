@@ -14,6 +14,7 @@ import torch.nn as nn
 from sheet.modules.ldnet.modules import Projection
 from sheet.modules.utils import make_non_pad_mask
 
+
 class SSLMOS(torch.nn.Module):
     def __init__(
         self,
@@ -36,7 +37,6 @@ class SSLMOS(torch.nn.Module):
         decoder_dnn_dim: int = 64,
         output_type: str = "scalar",
         range_clipping: bool = True,
-        
     ):
         super().__init__()  # this is needed! or else there will be an error.
         self.use_mean_listener = use_mean_listener
@@ -44,16 +44,17 @@ class SSLMOS(torch.nn.Module):
 
         # define listener embedding
         self.use_listener_modeling = use_listener_modeling
-        
+
         # define ssl model
         if ssl_module == "s3prl":
             from s3prl.nn import S3PRLUpstream
+
             if s3prl_name in S3PRLUpstream.available_names():
                 self.ssl_model = S3PRLUpstream(s3prl_name)
             self.ssl_model_layer_idx = ssl_model_layer_idx
         else:
             raise NotImplementedError
-        
+
         # default uses ffn type mean net
         self.mean_net_dnn = Projection(
             ssl_model_output_dim,
@@ -105,8 +106,10 @@ class SSLMOS(torch.nn.Module):
                 [listener_embs for i in range(time)], dim=1
             )  # (batch, time, feat_dim)
 
-        # ssl model forward 
-        all_encoder_outputs, all_encoder_outputs_lens = self.ssl_model(waveform, waveform_lengths)
+        # ssl model forward
+        all_encoder_outputs, all_encoder_outputs_lens = self.ssl_model(
+            waveform, waveform_lengths
+        )
         encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
         encoder_outputs_lens = all_encoder_outputs_lens[self.ssl_model_layer_idx]
 
@@ -147,12 +150,14 @@ class SSLMOS(torch.nn.Module):
         ld_scores = decoder_outputs if self.use_listener_modeling else None
 
         return {"mean_scores": mean_scores, "ld_scores": ld_scores}
-    
+
     def mean_net_inference(self, waveform, waveform_lengths=None):
         batch, time = waveform.shape
 
-        # ssl model forward 
-        all_encoder_outputs, all_encoder_outputs_lens = self.ssl_model(waveform, waveform_lengths)
+        # ssl model forward
+        all_encoder_outputs, all_encoder_outputs_lens = self.ssl_model(
+            waveform, waveform_lengths
+        )
         encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
         encoder_outputs_lens = all_encoder_outputs_lens[self.ssl_model_layer_idx]
 

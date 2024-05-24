@@ -7,12 +7,13 @@
 """Train model."""
 
 import argparse
-import humanfriendly
 import logging
 import os
 import sys
 import time
 from collections import OrderedDict, defaultdict
+
+import humanfriendly
 
 # set to avoid matplotlib error in CLI environment
 import matplotlib
@@ -302,7 +303,9 @@ def main():
         model = DistributedDataParallel(model)
 
     # show settings
-    logging.info("Model parameters: {}".format(humanfriendly.format_size(model.get_num_params())))
+    logging.info(
+        "Model parameters: {}".format(humanfriendly.format_size(model.get_num_params()))
+    )
     logging.info(model)
     logging.info(optimizer)
     logging.info(scheduler)
@@ -349,13 +352,15 @@ def main():
         logging.info(f"{key} = {value}")
 
     # run training loop
-    try:
-        trainer.run()
-    finally:
-        trainer.save_checkpoint(
-            os.path.join(config["outdir"], f"checkpoint-{trainer.steps}steps.pkl")
-        )
-        logging.info(f"Successfully saved checkpoint @ {trainer.steps}steps.")
+    # try:
+    #     trainer.run()
+    # finally:
+    #     trainer.save_checkpoint(
+    #         os.path.join(config["outdir"], f"checkpoint-{trainer.steps}steps.pkl")
+    #     )
+    #     logging.info(f"Successfully saved checkpoint @ {trainer.steps}steps.")
+    # NOTE(unilight): I don't think we need to save again here
+    trainer.run()
 
 
 if __name__ == "__main__":

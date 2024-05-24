@@ -27,6 +27,8 @@ from sheet.evaluation.plot import (
     plot_utt_level_hist,
     plot_utt_level_scatter,
 )
+from sheet.utils.model_io import model_average
+from sheet.utils.types import str2bool
 
 
 def main():
@@ -51,7 +53,6 @@ def main():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        required=True,
         help="checkpoint file to be loaded.",
     )
     parser.add_argument(
@@ -73,6 +74,12 @@ def main():
         "--inference-mode",
         type=str,
         help="inference mode. if not specified, use the default setting in config",
+    )
+    parser.add_argument(
+        "--model-averaging",
+        type=str2bool,
+        default="False",
+        help="if true, average all model checkpoints in the exp directory",
     )
     args = parser.parse_args()
 
@@ -104,11 +111,14 @@ def main():
         args.config = os.path.join(dirname, "config.yml")
     with open(args.config) as f:
         config = yaml.load(f, Loader=yaml.Loader)
-    
+
     args_dict = vars(args)
     # do not override if inference mode not specified
     if args_dict["inference_mode"] is None:
         del args_dict["inference_mode"]
+
+    # get expdir first
+    expdir = config["outdir"]
 
     config.update(args_dict)
     for key, value in config.items():
@@ -133,16 +143,27 @@ def main():
     else:
         device = torch.device("cpu")
 
-    # get model and load parameters
+    # get model
     model_class = getattr(sheet.models, config["model_type"])
     model = model_class(
         config["model_input"],
         num_listeners=config.get("num_listeners", None),
         **config["model_params"],
     )
-    model.load_state_dict(torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"])
+
+    # load parameter, or take average
+    assert (args.checkpoint == "" and args.model_averaging) or (
+        args.checkpoint != "" and not args.model_averaging
+    )
+    if args.checkpoint != "":
+        model.load_state_dict(
+            torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"]
+        )
+        logging.info(f"Loaded model parameters from {args.checkpoint}.")
+    else:
+        model, checkpoint_paths = model_average(model, expdir)
+        logging.info(f"Loaded model parameters from: {', '.join(checkpoint_paths)}")
     model = model.eval().to(device)
-    logging.info(f"Loaded model parameters from {args.checkpoint}.")
 
     # set placeholders
     eval_results = defaultdict(list)
@@ -158,7 +179,9 @@ def main():
 
             # model forward
             if config["inference_mode"] == "mean_listener":
-                outputs = model.mean_listener_inference(model_input, model_input_lengths)
+                outputs = model.mean_listener_inference(
+                    model_input, model_input_lengths
+                )
             elif config["inference_mode"] == "mean_net":
                 outputs = model.mean_net_inference(model_input, model_input_lengths)
             else:
