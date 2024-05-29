@@ -9,20 +9,17 @@
 import argparse
 import logging
 import os
+import pickle
 import time
-from collections import defaultdict
 
 import numpy as np
-import soundfile as sf
 import torch
 import yaml
-from tqdm import tqdm
 
 import sheet
 import sheet.datasets
 import sheet.models
 
-import pickle
 
 def main():
     """Run inference process."""
@@ -47,9 +44,7 @@ def main():
         "--meta-model-config",
         required=True,
         type=str,
-        help=(
-            "yaml format configuration file for the meta model. "
-        ),
+        help=("yaml format configuration file for the meta model. "),
     )
     parser.add_argument(
         "--verbose",
@@ -118,17 +113,17 @@ def main():
     )
 
     # run inference on all models
-    checkpoint_paths = sorted([
-        os.path.join(args.expdir, p)
-        for p in os.listdir(args.expdir)
-        if os.path.isfile(os.path.join(args.expdir, p)) and p.endswith("steps.pkl")
-    ])
+    checkpoint_paths = sorted(
+        [
+            os.path.join(args.expdir, p)
+            for p in os.listdir(args.expdir)
+            if os.path.isfile(os.path.join(args.expdir, p)) and p.endswith("steps.pkl")
+        ]
+    )
     xs = np.empty((len(dataset), len(checkpoint_paths)))
     for i, checkpoint_path in enumerate(checkpoint_paths):
         # load model
-        model.load_state_dict(
-            torch.load(checkpoint_path, map_location="cpu")["model"]
-        )
+        model.load_state_dict(torch.load(checkpoint_path, map_location="cpu")["model"])
         logging.info(f"Loaded model parameters from {checkpoint_path}.")
         model = model.eval().to(device)
 
@@ -139,7 +134,9 @@ def main():
             for j, batch in enumerate(dataset):
                 # set up model input
                 model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-                model_input_lengths = model_input.new_tensor([model_input.size(1)]).long()
+                model_input_lengths = model_input.new_tensor(
+                    [model_input.size(1)]
+                ).long()
 
                 # model forward
                 if config["inference_mode"] == "mean_listener":
@@ -154,24 +151,25 @@ def main():
                 # store results
                 pred_score = outputs["scores"].cpu().detach().numpy()[0]
                 xs[j][i] = pred_score
-        
+
         total_inference_time = time.time() - start_time
         logging.info("Total inference time = {} secs.".format(total_inference_time))
         logging.info(
             "Average inference speed = {:.3f} sec / sample.".format(
-            total_inference_time / len(dataset)
+                total_inference_time / len(dataset)
             )
         )
 
     ys = np.array([batch["avg_score"] for batch in dataset])
-    
+
     # define meta model
     if config["meta_model_type"] == "Ridge":
         from sklearn.linear_model import Ridge
+
         meta_model = Ridge(**config["meta_model_params"])
     else:
         raise NotImplementedError
-    
+
     # train meta model
     start_time = time.time()
     logging.info("Start training meta model...")
@@ -180,8 +178,8 @@ def main():
     logging.info("Total training time = {} secs.".format(total_train_time))
 
     # save
-    with open(os.path.join(args.expdir, 'meta_model.pkl'),'wb') as f:
-        pickle.dump(meta_model,f)
+    with open(os.path.join(args.expdir, "meta_model.pkl"), "wb") as f:
+        pickle.dump(meta_model, f)
 
     with open(os.path.join(args.expdir, "config.yml"), "w") as f:
         yaml.dump(config, f, Dumper=yaml.Dumper)

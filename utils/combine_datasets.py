@@ -8,14 +8,11 @@
 
 import argparse
 import csv
-import librosa
 import logging
-import os
-import soundfile as sf
 import sys
-from tqdm import tqdm
 
 from sheet.utils import read_csv
+
 
 def main():
     """Run training process."""
@@ -24,7 +21,7 @@ def main():
         "--original-paths",
         required=True,
         type=str,
-        nargs='+',
+        nargs="+",
         help=("original csv file paths."),
     )
     parser.add_argument(
@@ -58,12 +55,13 @@ def main():
 
     # write csv
     logging.info("Writing output csv file.")
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for original in originals:
             for line in original:
                 writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

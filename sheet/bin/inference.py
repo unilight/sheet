@@ -171,15 +171,17 @@ def main():
     # stacking model inference
     if args.use_stacking:
         # load meta model
-        with open(args.meta_model_checkpoint, 'rb') as f:
+        with open(args.meta_model_checkpoint, "rb") as f:
             meta_model = pickle.load(f)
 
         # run inference on all models
-        checkpoint_paths = sorted([
-            os.path.join(expdir, p)
-            for p in os.listdir(expdir)
-            if os.path.isfile(os.path.join(expdir, p)) and p.endswith("steps.pkl")
-        ])
+        checkpoint_paths = sorted(
+            [
+                os.path.join(expdir, p)
+                for p in os.listdir(expdir)
+                if os.path.isfile(os.path.join(expdir, p)) and p.endswith("steps.pkl")
+            ]
+        )
         xs = np.empty((len(dataset), len(checkpoint_paths)))
         for i, checkpoint_path in enumerate(checkpoint_paths):
             # load model
@@ -196,7 +198,9 @@ def main():
                 for j, batch in enumerate(dataset):
                     # set up model input
                     model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-                    model_input_lengths = model_input.new_tensor([model_input.size(1)]).long()
+                    model_input_lengths = model_input.new_tensor(
+                        [model_input.size(1)]
+                    ).long()
 
                     # model forward
                     if config["inference_mode"] == "mean_listener":
@@ -204,19 +208,21 @@ def main():
                             model_input, model_input_lengths
                         )
                     elif config["inference_mode"] == "mean_net":
-                        outputs = model.mean_net_inference(model_input, model_input_lengths)
+                        outputs = model.mean_net_inference(
+                            model_input, model_input_lengths
+                        )
                     else:
                         raise NotImplementedError
 
                     # store results
                     pred_score = outputs["scores"].cpu().detach().numpy()[0]
                     xs[j][i] = pred_score
-            
+
             total_inference_time = time.time() - start_time
             logging.info("Total inference time = {} secs.".format(total_inference_time))
             logging.info(
                 "Average inference speed = {:.3f} sec / sample.".format(
-                total_inference_time / len(dataset)
+                    total_inference_time / len(dataset)
                 )
             )
 
@@ -246,15 +252,15 @@ def main():
             logging.info(f"Loaded model parameters from: {', '.join(checkpoint_paths)}")
         model = model.eval().to(device)
 
-        
-
         # start inference
         start_time = time.time()
         with torch.no_grad(), tqdm(dataset, desc="[inference]") as pbar:
             for batch in pbar:
                 # set up model input
                 model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-                model_input_lengths = model_input.new_tensor([model_input.size(1)]).long()
+                model_input_lengths = model_input.new_tensor(
+                    [model_input.size(1)]
+                ).long()
 
                 # model forward
                 if config["inference_mode"] == "mean_listener":

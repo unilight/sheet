@@ -126,7 +126,9 @@ class NonIntrusiveDataset(Dataset):
             if sample_rate != self.target_sample_rate:
                 resampler_key = f"{sample_rate}-{self.target_sample_rate}"
                 if resampler_key not in self.resamplers:
-                    self.resamplers[resampler_key] = torchaudio.transforms.Resample(sample_rate, self.target_sample_rate, dtype=waveform.dtype)
+                    self.resamplers[resampler_key] = torchaudio.transforms.Resample(
+                        sample_rate, self.target_sample_rate, dtype=waveform.dtype
+                    )
                 waveform = self.resamplers[resampler_key](waveform)
             item["waveform"] = waveform.squeeze(-1)
             if self.allow_cache:
