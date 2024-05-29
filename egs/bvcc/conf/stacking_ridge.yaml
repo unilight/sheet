@@ -1,0 +1,3 @@
+meta_model_type: "Ridge"
+meta_model_params:
+  alpha: 1.0

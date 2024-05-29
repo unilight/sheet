@@ -23,6 +23,7 @@ class NonIntrusiveDataset(Dataset):
     def __init__(
         self,
         csv_path,
+        target_sample_rate,
         model_input="wav",
         wav_only=False,
         use_mean_listener=False,
@@ -36,6 +37,8 @@ class NonIntrusiveDataset(Dataset):
             allow_cache (bool): Whether to allow cache of the loaded files.
 
         """
+        self.target_sample_rate = target_sample_rate
+        self.resamplers = {}
         assert csv_path != ""
 
         # set model input transform
@@ -106,7 +109,7 @@ class NonIntrusiveDataset(Dataset):
 
     def __getitem__(self, idx):
         item = self.metadata[idx]
-        item["score"] = int(item["score"])  # cast from str to int
+        item["score"] = float(item["score"])  # cast from str to int
         if "listener_idx" in item:
             item["listener_idx"] = int(item["listener_idx"])  # cast from str to int
         hash_id = item["hash_id"]
@@ -119,6 +122,12 @@ class NonIntrusiveDataset(Dataset):
             waveform, sample_rate = torchaudio.load(
                 item["wav_path"], channels_first=False
             )  # waveform: [T, 1]
+            # resample if needed
+            if sample_rate != self.target_sample_rate:
+                resampler_key = f"{sample_rate}-{self.target_sample_rate}"
+                if resampler_key not in self.resamplers:
+                    self.resamplers[resampler_key] = torchaudio.transforms.Resample(sample_rate, self.target_sample_rate, dtype=waveform.dtype)
+                waveform = self.resamplers[resampler_key](waveform)
             item["waveform"] = waveform.squeeze(-1)
             if self.allow_cache:
                 self.wav_caches[hash_id] = item["waveform"]
@@ -144,7 +153,7 @@ class NonIntrusiveDataset(Dataset):
 
         # loop through metadata
         for item in self.metadata:
-            sample_scores[item["sample_id"]].append(int(item["score"]))
+            sample_scores[item["sample_id"]].append(float(item["score"]))
 
         # take average
         sample_avg_score = {

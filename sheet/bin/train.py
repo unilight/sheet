@@ -184,6 +184,7 @@ def main():
     )
     train_dataset = dataset_class(
         csv_path=args.train_csv_path,
+        target_sample_rate=config["sampling_rate"],
         model_input=config["model_input"],
         wav_only=config.get("wav_only", False),
         use_mean_listener=config["model_params"]["use_mean_listener"],
@@ -192,6 +193,7 @@ def main():
     logging.info(f"The number of training files = {len(train_dataset)}.")
     dev_dataset = dataset_class(
         csv_path=args.dev_csv_path,
+        target_sample_rate=config["sampling_rate"],
         model_input=config["model_input"],
         wav_only=True,
         allow_cache=config["allow_cache"],

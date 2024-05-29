@@ -9,6 +9,7 @@
 import argparse
 import logging
 import os
+import pickle
 import time
 from collections import defaultdict
 
@@ -48,7 +49,7 @@ def main():
         "--outdir",
         type=str,
         required=True,
-        help="directory to save generated speech.",
+        help="directory to save generated figures.",
     )
     parser.add_argument(
         "--checkpoint",
@@ -80,6 +81,17 @@ def main():
         type=str2bool,
         default="False",
         help="if true, average all model checkpoints in the exp directory",
+    )
+    parser.add_argument(
+        "--use-stacking",
+        type=str2bool,
+        default="False",
+        help="if true, use the stack model in the exp directory",
+    )
+    parser.add_argument(
+        "--meta-model-checkpoint",
+        type=str,
+        help="checkpoint file of meta model.",
     )
     args = parser.parse_args()
 
@@ -131,6 +143,7 @@ def main():
     )
     dataset = dataset_class(
         csv_path=args.csv_path,
+        target_sample_rate=config["sampling_rate"],
         model_input=config["model_input"],
         wav_only=True,
         allow_cache=False,
@@ -151,58 +164,124 @@ def main():
         **config["model_params"],
     )
 
-    # load parameter, or take average
-    assert (args.checkpoint == "" and args.model_averaging) or (
-        args.checkpoint != "" and not args.model_averaging
-    )
-    if args.checkpoint != "":
-        model.load_state_dict(
-            torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"]
-        )
-        logging.info(f"Loaded model parameters from {args.checkpoint}.")
-    else:
-        model, checkpoint_paths = model_average(model, expdir)
-        logging.info(f"Loaded model parameters from: {', '.join(checkpoint_paths)}")
-    model = model.eval().to(device)
-
     # set placeholders
     eval_results = defaultdict(list)
     eval_sys_results = defaultdict(lambda: defaultdict(list))
 
-    # start inference
-    start_time = time.time()
-    with torch.no_grad(), tqdm(dataset, desc="[inference]") as pbar:
-        for batch in pbar:
-            # set up model input
-            model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-            model_input_lengths = model_input.new_tensor([model_input.size(1)]).long()
+    # stacking model inference
+    if args.use_stacking:
+        # load meta model
+        with open(args.meta_model_checkpoint, 'rb') as f:
+            meta_model = pickle.load(f)
 
-            # model forward
-            if config["inference_mode"] == "mean_listener":
-                outputs = model.mean_listener_inference(
-                    model_input, model_input_lengths
+        # run inference on all models
+        checkpoint_paths = sorted([
+            os.path.join(expdir, p)
+            for p in os.listdir(expdir)
+            if os.path.isfile(os.path.join(expdir, p)) and p.endswith("steps.pkl")
+        ])
+        xs = np.empty((len(dataset), len(checkpoint_paths)))
+        for i, checkpoint_path in enumerate(checkpoint_paths):
+            # load model
+            model.load_state_dict(
+                torch.load(checkpoint_path, map_location="cpu")["model"]
+            )
+            logging.info(f"Loaded model parameters from {checkpoint_path}.")
+            model = model.eval().to(device)
+
+            # start inference
+            start_time = time.time()
+            logging.info("Running inference...")
+            with torch.no_grad():
+                for j, batch in enumerate(dataset):
+                    # set up model input
+                    model_input = batch[config["model_input"]].unsqueeze(0).to(device)
+                    model_input_lengths = model_input.new_tensor([model_input.size(1)]).long()
+
+                    # model forward
+                    if config["inference_mode"] == "mean_listener":
+                        outputs = model.mean_listener_inference(
+                            model_input, model_input_lengths
+                        )
+                    elif config["inference_mode"] == "mean_net":
+                        outputs = model.mean_net_inference(model_input, model_input_lengths)
+                    else:
+                        raise NotImplementedError
+
+                    # store results
+                    pred_score = outputs["scores"].cpu().detach().numpy()[0]
+                    xs[j][i] = pred_score
+            
+            total_inference_time = time.time() - start_time
+            logging.info("Total inference time = {} secs.".format(total_inference_time))
+            logging.info(
+                "Average inference speed = {:.3f} sec / sample.".format(
+                total_inference_time / len(dataset)
                 )
-            elif config["inference_mode"] == "mean_net":
-                outputs = model.mean_net_inference(model_input, model_input_lengths)
-            else:
-                raise NotImplementedError
+            )
 
-            # store results
-            pred_mean_scores = outputs["scores"].cpu().detach().numpy()[0]
+        # run inference on meta model
+        pred_mean_scores = meta_model.predict(xs)
+
+        # rerun dataset to get system level scores
+        for i, batch in enumerate(dataset):
             true_mean_scores = batch["avg_score"]
-            eval_results["pred_mean_scores"].append(pred_mean_scores)
+            eval_results["pred_mean_scores"].append(pred_mean_scores[i])
             eval_results["true_mean_scores"].append(true_mean_scores)
             sys_name = batch["system_id"]
-            eval_sys_results["pred_mean_scores"][sys_name].append(pred_mean_scores)
+            eval_sys_results["pred_mean_scores"][sys_name].append(pred_mean_scores[i])
             eval_sys_results["true_mean_scores"][sys_name].append(true_mean_scores)
-
-    total_inference_time = time.time() - start_time
-    logging.info("Total inference time = {} secs.".format(total_inference_time))
-    logging.info(
-        "Average inference speed = {:.3f} sec / sample.".format(
-            total_inference_time / len(dataset)
+    else:
+        # load parameter, or take average
+        assert (args.checkpoint == "" and args.model_averaging) or (
+            args.checkpoint != "" and not args.model_averaging
         )
-    )
+        if args.checkpoint != "":
+            model.load_state_dict(
+                torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"]
+            )
+            logging.info(f"Loaded model parameters from {args.checkpoint}.")
+        else:
+            model, checkpoint_paths = model_average(model, expdir)
+            logging.info(f"Loaded model parameters from: {', '.join(checkpoint_paths)}")
+        model = model.eval().to(device)
+
+        
+
+        # start inference
+        start_time = time.time()
+        with torch.no_grad(), tqdm(dataset, desc="[inference]") as pbar:
+            for batch in pbar:
+                # set up model input
+                model_input = batch[config["model_input"]].unsqueeze(0).to(device)
+                model_input_lengths = model_input.new_tensor([model_input.size(1)]).long()
+
+                # model forward
+                if config["inference_mode"] == "mean_listener":
+                    outputs = model.mean_listener_inference(
+                        model_input, model_input_lengths
+                    )
+                elif config["inference_mode"] == "mean_net":
+                    outputs = model.mean_net_inference(model_input, model_input_lengths)
+                else:
+                    raise NotImplementedError
+
+                # store results
+                pred_mean_scores = outputs["scores"].cpu().detach().numpy()[0]
+                true_mean_scores = batch["avg_score"]
+                eval_results["pred_mean_scores"].append(pred_mean_scores)
+                eval_results["true_mean_scores"].append(true_mean_scores)
+                sys_name = batch["system_id"]
+                eval_sys_results["pred_mean_scores"][sys_name].append(pred_mean_scores)
+                eval_sys_results["true_mean_scores"][sys_name].append(true_mean_scores)
+
+        total_inference_time = time.time() - start_time
+        logging.info("Total inference time = {} secs.".format(total_inference_time))
+        logging.info(
+            "Average inference speed = {:.3f} sec / sample.".format(
+                total_inference_time / len(dataset)
+            )
+        )
 
     # calculate metrics
     eval_results["true_mean_scores"] = np.array(eval_results["true_mean_scores"])

@@ -59,6 +59,8 @@ or, support some model that mixes core techniques in the models above.
 - Training
     - Automatic best-n model saving and early stopiing based on given validation criterion
     - Visualization, including predicted score distribution, scatter plot of utterance and system level scores
+    - Model averaging
+    - Model ensembling by stacking
 
 
 ## Acknowledgements
