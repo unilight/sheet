@@ -15,6 +15,7 @@ if [ ! -e ${db}/somos.done ]; then
     unzip somos.zip
     unzip audios.zip
     rm somos.zip
+    rm audios.zip
     cd $cwd
     echo "Successfully finished download."
     touch ${db}/somos.done

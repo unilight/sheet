@@ -26,11 +26,20 @@ Currently we support the following datasets:
     - Dataset download link: https://zenodo.org/records/6572573
     - Paper link: [[Original paper](https://arxiv.org/abs/2105.02373)] [[VoiceMOS Challenge 2022](https://arxiv.org/abs/2203.11389)]
     - Recipe: `egs/bvcc`
+- SOMOS
+    - Dataset download link: https://zenodo.org/records/7378801
+    - Paper link: [[arXiv version](https://arxiv.org/abs/2204.03040)]
+    - Recipe: `egs/somos`
+- NISQA
+    - Dataset download link: https://github.com/gabrielmittag/NISQA/wiki/NISQA-Corpus
+    - Paper link: [[arXiv version](https://arxiv.org/abs/2104.09494)]
+    - Recipe: `egs/nisqa`
 
 We plan to support the following datasets in the future:
 
-- SOMOS
-- NISQA
+- VoiceMOS Challenge 2022 OOD track
+- VoiceMOS Challenge 2023
+- VoiceMOS Challenge 2024
 
 ## Supported Models
 
@@ -55,7 +64,8 @@ or, support some model that mixes core techniques in the models above.
 
 - Modeling
     - Listener modeling
-    - Self-supervised learning (SSL) based encoder
+    - Self-supervised learning (SSL) based encoder, supported by S3PRL
+      - Find the complete list of supported SSL models [here](https://s3prl.github.io/s3prl/tutorial/upstream_collection.html).
 - Training
     - Automatic best-n model saving and early stopiing based on given validation criterion
     - Visualization, including predicted score distribution, scatter plot of utterance and system level scores
