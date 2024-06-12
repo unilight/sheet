@@ -27,6 +27,8 @@ class NonIntrusiveDataset(Dataset):
         model_input="wav",
         wav_only=False,
         use_mean_listener=False,
+        use_phoneme=False,
+        symbols=None,
         allow_cache=False,
     ):
         """Initialize dataset.
@@ -38,6 +40,9 @@ class NonIntrusiveDataset(Dataset):
 
         """
         self.target_sample_rate = target_sample_rate
+        self.use_phoneme = use_phoneme
+        if self.use_phoneme:
+            self.symbols = symbols
         self.resamplers = {}
         assert csv_path != ""
 
@@ -113,6 +118,15 @@ class NonIntrusiveDataset(Dataset):
         if "listener_idx" in item:
             item["listener_idx"] = int(item["listener_idx"])  # cast from str to int
         hash_id = item["hash_id"]
+
+        # process text
+        if self.use_phoneme:
+            if "phoneme" in item:
+                if "phoneme_idxs" not in item:
+                    item["phoneme_idxs"] = [self.symbols.index(p) for p in item["phoneme"]]
+            if "reference" in item:
+                if "reference_idxs" not in item:
+                    item["reference_idxs"] = [self.symbols.index(p) for p in item["reference"]]
 
         # fetch waveform. return cached item if exists
         if self.allow_cache and len(self.wav_caches[hash_id]) != 0:

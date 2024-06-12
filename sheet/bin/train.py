@@ -187,6 +187,8 @@ def main():
         target_sample_rate=config["sampling_rate"],
         model_input=config["model_input"],
         wav_only=config.get("wav_only", False),
+        use_phoneme=config.get("use_phoneme", False),
+        symbols=config.get("symbols", None),
         use_mean_listener=config["model_params"]["use_mean_listener"],
         allow_cache=config["allow_cache"],
     )
@@ -196,6 +198,8 @@ def main():
         target_sample_rate=config["sampling_rate"],
         model_input=config["model_input"],
         wav_only=True,
+        use_phoneme=config.get("use_phoneme", False),
+        symbols=config.get("symbols", None),
         allow_cache=config["allow_cache"],
     )
     logging.info(f"The number of development files = {len(dev_dataset)}.")
@@ -265,14 +269,28 @@ def main():
 
     # define criterions
     criterion = {}
-    if config["mean_score_criterion_type"]:
-        criterion["mean_score_criterion"] = getattr(
-            sheet.losses, config["mean_score_criterion_type"]
-        )(**config["mean_score_criterion_params"])
-    if config["listener_score_criterion_type"]:
-        criterion["listener_score_criterion"] = getattr(
-            sheet.losses, config["listener_score_criterion_type"]
-        )(**config["listener_score_criterion_params"])
+    if config["mean_score_criterions"] is not None:
+        criterion["mean_score_criterions"] = [
+            {
+                "type": criterion_dict["criterion_type"],
+                "criterion": getattr(
+                    sheet.losses, criterion_dict["criterion_type"]
+                )(**criterion_dict["criterion_params"]),
+                "weight": criterion_dict["criterion_weight"]
+            }
+            for criterion_dict in config["mean_score_criterions"]
+        ]
+    if config["listener_score_criterions"] is not None:
+        criterion["listener_score_criterions"] = [
+            {
+                "type": criterion_dict["criterion_type"],
+                "criterion": getattr(
+                    sheet.losses, criterion_dict["criterion_type"]
+                )(**criterion_dict["criterion_params"]),
+                "weight": criterion_dict["criterion_weight"]
+            }
+            for criterion_dict in config["listener_score_criterions"]
+        ]
 
     # define optimizers and schedulers
     optimizer_class = getattr(

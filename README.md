@@ -14,9 +14,19 @@ cd sheet/tools
 make
 ```
 
-## Complete training, decoding and benchmarking
+## Usage
 
-Same as many speech processing based repositories ([ESPNet](https://github.com/espnet/espnet), [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN), etc.), we formulate our recipes in kaldi-style. They can be found in the `egs` folder. Please check the detailed usage in each recipe.
+Same as many speech processing based repositories ([ESPNet](https://github.com/espnet/espnet), [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN), etc.), we formulate our recipes in kaldi-style. They can be found in the `egs` folder.
+
+There are several usages of this toolkit.
+
+### Training a speech quality predictor with a supported dataset on your own
+
+You can train your own speech quality predictor using the datasets we support. Usually these datasets come with their own test sets, and you can test on these sets after training finishes. The starting point of each recipe is the `run.sh` file. Please check the detailed usage in each recipe.
+
+### Zero-shot prediction on multiple benchmarks with your trained model
+
+Inside each recipe, after the model training is done, you can run zero-shot prediction on other datasets and benchmarks. This can be done by running `run_XXX_test.sh` in each recipe. They are symbolic links to the scripts in the `egs/BENCHMARKS` folder.
 
 ## Supported Datasets
 
@@ -35,11 +45,15 @@ Currently we support the following datasets:
     - Paper link: [[arXiv version](https://arxiv.org/abs/2104.09494)]
     - Recipe: `egs/nisqa`
 
-We plan to support the following datasets in the future:
+
+## Supported Benchmarks
+
+In addition to the test sets provided in the datasets above, we plan to support the following benchmarks:
 
 - VoiceMOS Challenge 2022 OOD track
-- VoiceMOS Challenge 2023
+- VoiceMOS Challenge 2023 (BC2023, SVCC2023, TMHINTQI-(S))
 - VoiceMOS Challenge 2024
+
 
 ## Supported Models
 
@@ -53,12 +67,13 @@ Currently we support the following models:
     - Original repo link: https://github.com/nii-yamagishilab/mos-finetune-ssl/tree/main
     - Paper link: [[arXiv](https://arxiv.org/abs/2110.02635)]
     - Example config: `egs/bvcc/conf/ssl-mos-wav2vec2.yaml`
+- UTMOS (Strong learner)
+    - Original repo link: https://github.com/sarulab-speech/UTMOS22/tree/master/strong
+    - Paper link: [[arXiv](https://arxiv.org/abs/2204.02152)]
+    - Example config: `egs/bvcc/conf/utmos-strong.yaml`
+    - Notes:
+        - After discussion with the first author of UTMOS, Takaaki, we feel that UTMOS = SSL-MOS + listener modeling + contrastive loss + several model arch and training differences. Takaaki also felt that using phoneme and reference is not really helpful for UTMOS strong alone. Therefore we did not implement every component of UTMOS strong. For instance, we did not use domain ID and data augmentation.
 
-We plan to support the following models in the future:
-
-- UTMOS
-
-or, support some model that mixes core techniques in the models above.
 
 ## Supported Features
 

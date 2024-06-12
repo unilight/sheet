@@ -6,40 +6,38 @@ dataset_type: NonIntrusiveDataset
 collater_type: NonIntrusiveCollater
 trainer_type: NonIntrusiveEstimatorTrainer
 sampling_rate: 16000                # Sampling rate.
-model_input: mag_sgram              # choices: wav, mag_sgram
-use_phoneme: False                  # only True for UTMOS
+model_input: waveform               # choices: waveform, mag_sgram
+use_phoneme: True                   # only True for UTMOS
+symbols: >
+    _;:,.!?¡¿—…"«»“” ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789ɑɐɒæɓʙβɔɕçɗɖðʤəɘɚɛɜɝɞɟʄɡɠɢʛɦɧħɥʜɨɪʝɭɬɫɮʟɱɯɰŋɳɲɴøɵɸθœɶʘɹɺɾɻʀʁɽʂʃʈʧʉʊʋⱱʌɣɤʍχʎʏʑʐʒʔʡʕʢǀǁǂǃˈˌːˑʼʴʰʱʲʷˠˤ˞↓↑→↗↘'̩'ᵻ'̪'̃
 
 ###########################################################
 #              NETWORK ARCHITECTURE SETTING               #
 ###########################################################
-model_type: "LDNet"
+model_type: "UTMOS"
 model_params:
+    ssl_module: "s3prl"
+    s3prl_name: "wav2vec2"
+    ssl_model_output_dim: 768
+    ssl_model_layer_idx: -1
+
+    use_phoneme: True
+    phoneme_encoder_dim: 256
+    phoneme_encoder_emb_dim: 256
+    phoneme_encoder_out_dim: 256
+    phoneme_encoder_n_lstm_layers: 3
+    phoneme_encoder_vocab_size: 300 # this is a dummy number that is set to be much larger than the actual vocab
+    use_reference: True
+
+    use_listener_modeling: True
     listener_emb_dim: 128
-
-    activation: "ReLU"
-    encoder_type: "mobilenetv3"
-    encoder_bneck_configs:
-        - [16, 3, 16, 16, True, "RE", 3, 1]
-        - [16, 3, 72, 24, False, "RE", 3, 1]
-        - [24, 3, 88, 24, False, "RE", 1, 1]
-        - [24, 5, 96, 40, True, "HS", 3, 1]
-        - [40, 5, 240, 40, True, "HS", 1, 1]
-        - [40, 5, 240, 40, True, "HS", 1, 1]
-        - [40, 5, 120, 48, True, "HS", 1, 1]
-        - [48, 5, 144, 48, True, "HS", 1, 1]
-        - [48, 5, 288, 96, True, "HS", 3, 1] 
-        - [96, 5, 576, 96, True, "HS", 1, 1]
-        - [96, 5, 576, 96, True, "HS", 1, 1]
-    encoder_output_dim: 256
-
-    decoder_type: "ffn"
-    decoder_dnn_dim: 64
-    output_type: "scalar"
-    range_clipping: True # this is needed if output_type is scalar
-
-    use_mean_net: False
     use_mean_listener: True
 
+    decoder_dnn_dim: 2048
+    output_type: "scalar"
+    range_clipping: True # this is needed if output_type is scalar
+    
+    
 ###########################################################
 #                      LOSS SETTING                       #
 ###########################################################
@@ -49,8 +47,12 @@ listener_score_criterions:
       criterion_weight: 1.0
       criterion_params:
         order: 2
-        tau: 0.5
+        tau: 0.25
         masked_loss: False
+    - criterion_type: "ContrastiveLoss"
+      criterion_weight: 0.5
+      criterion_params:
+        margin: 0.1
 
 ###########################################################
 #                   INFERENCE SETTING                     #
@@ -62,9 +64,11 @@ inference_mode: mean_listener   # this is used for
 ###########################################################
 #                  DATA LOADER SETTING                    #
 ###########################################################
-train_batch_size: 60
+train_batch_size: 24
 test_batch_size: 1
 padding_mode: "repetitive"  # repetitive, zero_padding
+wav_only: False              # Reduce to average only even for the training data.
+                            # Set to True usually if no use listener modeling at all (ex. SSL-MOS)
 pin_memory: true            # Whether to pin memory in Pytorch DataLoader.
 num_workers: 0              # Number of workers in Pytorch DataLoader.
 allow_cache: true           # Whether to allow cache in dataset. If true, it requires cpu memory.
@@ -72,24 +76,20 @@ allow_cache: true           # Whether to allow cache in dataset. If true, it req
 ###########################################################
 #             OPTIMIZER & SCHEDULER SETTING               #
 ###########################################################
-optimizer_type: RMSprop
+optimizer_type: Adam
 optimizer_params:
-    lr: 1.0e-3
-    # the following params come from
-    # https://github.com/pytorch/vision/blob/c2ab0c59f42babf9ad01aa616cd8a901daac86dd/references/classification/train.py#L172-L173
-    eps: 0.0316
-    alpha: 0.9
+    lr: 2.0e-5
 grad_norm: 1.0              # Gradient norm.
 scheduler_type: stepLR
 scheduler_params:
-    step_size: 1000
+    step_size: 4000
     gamma: 0.97
 
 ###########################################################
 #                    INTERVAL SETTING                     #
 ###########################################################
 train_max_steps: 100000                 # Number of training steps.
-eval_and_save_interval_steps: 1000      # Interval steps to do evaluation and save checkpoint.
+eval_and_save_interval_steps: 100       # Interval steps to do evaluation and save checkpoint.
 log_interval_steps: 100                 # Interval steps to record the training log.
 keep_nbest_models: 5                    # number of models to keep
 patience: 20                            # patience for early stopping

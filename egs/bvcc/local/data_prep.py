@@ -13,6 +13,7 @@ import os
 import sys
 
 from sheet.utils import read_csv
+from sheet.utils.types import str2bool
 
 def main():
     """Run training process."""
@@ -37,7 +38,14 @@ def main():
     )
     parser.add_argument(
         "--generate-listener-id",
-        action='store_true'
+        action='store_true',
+        help=("generate listener ID.")
+    )
+    parser.add_argument(
+        "--use-precalculated-text",
+        type=str2bool,
+        default=True,
+        help=("use pre-calculated transcription. if false, perform calculation")
     )
     args = parser.parse_args()
 
@@ -47,6 +55,24 @@ def main():
         stream=sys.stdout,
         format="%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s",
     )
+
+    # download pre-calculated text
+    if args.use_precalculated_text:
+        textpath = os.path.join("downloads", 'text')
+        if not os.path.isfile(textpath):
+            os.makedirs("downloads", exist_ok=True)
+            os.system(f"wget -O {textpath} https://raw.githubusercontent.com/sarulab-speech/UTMOS22/master/strong/transcriptions_clustered.csv")
+        lines, _ = read_csv(textpath, dict_reader=True)
+        texts = {
+            line["wav_name"].replace(".wav", ""): {
+                "phoneme": line["transcription"],
+                "cluster": line["cluster"],
+                "reference": line["reference"]
+            }
+            for line in lines
+        }
+    else:
+        raise NotImplementedError
 
     # read csv
     logging.info("Reading original csv file.")
@@ -71,6 +97,12 @@ def main():
             "sample_id": sample_id,
             "listener_id": listener_id,
         }
+
+        # skip samples that are not successfully transcribed?
+        if not f"{system_id}-{sample_id}" in texts:
+            continue
+        item.update(texts[f"{system_id}-{sample_id}"])
+
         if args.generate_listener_id:
             if not listener_id in listener_idxs:
                 listener_idxs[listener_id] = count
@@ -80,7 +112,7 @@ def main():
 
     # write csv
     logging.info("Writing output csv file.")
-    fieldnames = ["wav_path", "score", "system_id", "sample_id", "listener_id"]
+    fieldnames = ["wav_path", "score", "system_id", "sample_id", "listener_id", "phoneme", "cluster", "reference"]
     if args.generate_listener_id:
         fieldnames.append("listener_idx")
     with open(args.out, 'w', newline='') as csvfile:

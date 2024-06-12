@@ -69,35 +69,45 @@ class NonIntrusiveEstimatorTrainer(Trainer):
 
         # set inputs
         gen_loss = 0.0
-        model_input = batch[self.config["model_input"]].to(self.device)
-        model_input_lengths = batch[self.config["model_input"] + "_lengths"].to(
-            self.device
-        )
-        gt_scores = batch["scores"].to(self.device)
-        gt_avg_scores = batch["avg_scores"].to(self.device)
+        inputs = {
+            self.config["model_input"]: batch[self.config["model_input"]].to(self.device),
+            self.config["model_input"] + "_lengths": batch[self.config["model_input"] + "_lengths"].to(self.device),
+        }
         if "listener_idxs" in batch:
-            listener_idxs = batch["listener_idxs"].to(self.device)
-        else:
-            listener_idxs = None
+            inputs["listener_idxs"] = batch["listener_idxs"].to(self.device)
+        if "phoneme_idxs" in batch:
+            inputs["phoneme_idxs"] = batch["phoneme_idxs"].to(self.device)
+            inputs["phoneme_lengths"] = batch["phoneme_lengths"]
+        if "reference_idxs" in batch:
+            inputs["reference_idxs"] = batch["reference_idxs"].to(self.device)
+            inputs["reference_lengths"] = batch["reference_lengths"]
 
         # model forward
-        outputs = self.model(model_input, model_input_lengths, listener_idxs)
+        outputs = self.model(inputs)
+
+        # get ground truth scores
+        gt_scores = batch["scores"].to(self.device)
+        gt_avg_scores = batch["avg_scores"].to(self.device)
 
         # mean loss
-        if "mean_score_criterion" in self.criterion:
-            mean_score_loss = self.criterion["mean_score_criterion"](
-                outputs["mean_scores"], gt_avg_scores, model_input_lengths, self.device
-            )
-            gen_loss += mean_score_loss * self.config["mean_score_criterion_weight"]
-            self.total_train_loss["train/mean_score_loss"] += mean_score_loss.item()
+        if "mean_score_criterions" in self.criterion:
+            for criterion_dict in self.criterion["mean_score_criterions"]:
+                # always pass the following arguments
+                loss = criterion_dict["criterion"](
+                    outputs["mean_scores"], gt_avg_scores, outputs["frame_lengths"], self.device
+                )
+                gen_loss += loss * criterion_dict["weight"]
+                self.total_train_loss["train/mean_"+criterion_dict["type"]] += loss.item()
 
         # listener loss
-        if "listener_score_criterion" in self.criterion:
-            listener_loss = self.criterion["listener_score_criterion"](
-                outputs["ld_scores"], gt_scores, model_input_lengths, self.device
-            )
-            gen_loss += listener_loss * self.config["listener_score_criterion_weight"]
-            self.total_train_loss["train/listener_loss"] += listener_loss.item()
+        if "listener_score_criterions" in self.criterion:
+            for criterion_dict in self.criterion["listener_score_criterions"]:
+                # always pass the following arguments
+                loss = criterion_dict["criterion"](
+                    outputs["ld_scores"], gt_scores, outputs["frame_lengths"], self.device
+                )
+                gen_loss += loss * criterion_dict["weight"]
+                self.total_train_loss["train/listener_"+criterion_dict["type"]] += loss.item()
 
         self.total_train_loss["train/loss"] += gen_loss.item()
 
@@ -122,18 +132,22 @@ class NonIntrusiveEstimatorTrainer(Trainer):
         """Evaluate model one step."""
 
         # set up model input
-        model_input = batch[self.config["model_input"]].to(self.device)
-        model_input_lengths = batch[self.config["model_input"] + "_lengths"].to(
-            self.device
-        )
+        inputs = {
+            self.config["model_input"]: batch[self.config["model_input"]].to(self.device),
+            self.config["model_input"] + "_lengths": batch[self.config["model_input"] + "_lengths"].to(self.device),
+        }
+        if "phoneme_idxs" in batch:
+            inputs["phoneme_idxs"] = batch["phoneme_idxs"].to(self.device)
+            inputs["phoneme_lengths"] = batch["phoneme_lengths"]
+        if "reference_idxs" in batch:
+            inputs["reference_idxs"] = batch["reference_idxs"].to(self.device)
+            inputs["reference_lengths"] = batch["reference_lengths"]
 
         # model forward
         if self.config["inference_mode"] == "mean_listener":
-            outputs = self.model.mean_listener_inference(
-                model_input, model_input_lengths
-            )
+            outputs = self.model.mean_listener_inference(inputs)
         elif self.config["inference_mode"] == "mean_net":
-            outputs = self.model.mean_net_inference(model_input, model_input_lengths)
+            outputs = self.model.mean_net_inference(inputs)
 
         # construct the eval_results dict
         pred_mean_scores = outputs["scores"].cpu().detach().numpy()

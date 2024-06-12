@@ -18,11 +18,16 @@ class ScalarLoss(nn.Module):
     Loss for scalar output (we use the clipped MSE loss)
     """
 
-    def __init__(self, tau, masked_loss=False):
+    def __init__(self, tau, order=2, masked_loss=False):
         super(ScalarLoss, self).__init__()
         self.tau = tau
         self.masked_loss = masked_loss
-        self.criterion = torch.nn.MSELoss(reduction="none")
+        if order == 2:
+            self.criterion = torch.nn.MSELoss(reduction="none")
+        elif order == 1:
+            self.criterion = torch.nn.L1Loss(reduction="none")
+        else:
+            raise NotImplementedError
 
     def forward_criterion(self, y_hat, label, criterion_module, masks=None):
         # might investigate how to combine masked loss with categorical output

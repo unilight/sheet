@@ -89,17 +89,21 @@ class SSLMOS(torch.nn.Module):
     def get_num_params(self):
         return sum(p.numel() for n, p in self.named_parameters())
 
-    def forward(self, waveform, waveform_lengths, listener_ids):
+    def forward(self, inputs):
         """Calculate forward propagation.
         Args:
             waveform has shape (batch, time)
             waveform_lengths has shape (batch)
             listener_ids has shape (batch)
         """
+        waveform = inputs["waveform"]
+        waveform_lengths = inputs["waveform_lengths"]
+
         batch, time = waveform.shape
 
         # get listener embedding
         if self.use_listener_modeling:
+            listener_ids = inputs["listener_idxs"]
             # NOTE(unlight): not tested yet
             listener_embs = self.listener_embeddings(listener_ids)  # (batch, emb_dim)
             listener_embs = torch.stack(
@@ -145,13 +149,23 @@ class SSLMOS(torch.nn.Module):
                 decoder_outputs
             )  # [batch, time, 1 (scalar) / 5 (categorical)]
 
+        # set outputs
+        # return lengths for masked loss calculation
+        ret = {
+            "waveform_lengths": waveform_lengths,
+            "frame_lengths": encoder_outputs_lens
+        }
+
         # define scores
-        mean_scores = mean_net_outputs
-        ld_scores = decoder_outputs if self.use_listener_modeling else None
+        ret["mean_scores"] = mean_net_outputs
+        ret["ld_scores"] = decoder_outputs if self.use_listener_modeling else None
 
-        return {"mean_scores": mean_scores, "ld_scores": ld_scores}
+        return ret
 
-    def mean_net_inference(self, waveform, waveform_lengths=None):
+    def mean_net_inference(self, inputs):
+        waveform = inputs["waveform"]
+        waveform_lengths = inputs["waveform_lengths"]
+
         batch, time = waveform.shape
 
         # ssl model forward
@@ -161,13 +175,8 @@ class SSLMOS(torch.nn.Module):
         encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
         encoder_outputs_lens = all_encoder_outputs_lens[self.ssl_model_layer_idx]
 
-        # masked mean pooling
-        decoder_inputs = encoder_outputs
-        # masks = make_non_pad_mask(encoder_outputs_lens)
-        # masks = masks.unsqueeze(-1).to(decoder_inputs.device) # [B, max_time, 1]
-        # decoder_inputs = torch.sum(decoder_inputs * masks, dim=1) / encoder_outputs_lens.unsqueeze(-1)
-
         # mean net
+        decoder_inputs = encoder_outputs
         mean_net_outputs = self.mean_net_dnn(
             decoder_inputs
         )  # [batch, time, 1 (scalar) / 5 (categorical)]
@@ -175,124 +184,21 @@ class SSLMOS(torch.nn.Module):
         scores = torch.mean(mean_net_outputs, dim=1)
 
         return {"scores": scores}
-
-    def mean_listener_inference(self, mag_sgram):
-        """Mean listener inference.
-        Args:
-            mag_sgram has shape (batch, time, dim)
-        """
-
-        assert self.use_mean_listener
-        batch, time, dim = mag_sgram.shape
-        device = mag_sgram.device
-
-        # get listener embedding
-        listener_id = (torch.ones(batch, dtype=torch.long) * self.num_listeners - 1).to(
-            device
-        )  # (bs)
-        listener_embs = self.listener_embeddings(listener_id)  # (bs, emb_dim)
-        listener_embs = torch.stack(
-            [listener_embs for i in range(time)], dim=1
-        )  # (batch, time, feat_dim)
-
-        # encoder and inject listener embedding
-        mag_sgram = mag_sgram.unsqueeze(1)
-        encoder_outputs = self.encoder(mag_sgram)  # (batch, ch, time, feat_dim)
-        encoder_outputs = encoder_outputs.view(
-            (batch, time, -1)
-        )  # (batch, time, feat_dim)
-        decoder_inputs = torch.cat(
-            [encoder_outputs, listener_embs], dim=-1
-        )  # concat along feature dimension
-
-        # decoder
-        if self.decoder_type == "rnn":
-            decoder_outputs, (h, c) = self.decoder_rnn(decoder_inputs)
-        else:
-            decoder_outputs = decoder_inputs
-        decoder_outputs = self.decoder_dnn(
-            decoder_outputs
-        )  # [batch, time, 1 (scalar) / 5 (categorical)]
-
-        # define scores
-        decoder_outputs = decoder_outputs.squeeze(-1)
-        scores = torch.mean(decoder_outputs, dim=1)
-        return {"scores": scores}
-
-    def average_inference(self, mag_sgram, include_meanspk=False):
-        """Average listener inference.
-        Args:
-            mag_sgram has shape (batch, time, dim)
-        """
-
-        bs, time, _ = mag_sgram.shape
-        device = mag_sgram.device
-        if self.use_mean_listener and not include_meanspk:
-            actual_num_listeners = self.num_listeners - 1
-        else:
-            actual_num_listeners = self.num_listeners
-
-        # all listener ids
-        listener_id = (
-            torch.arange(actual_num_listeners, dtype=torch.long)
-            .repeat(bs, 1)
-            .to(device)
-        )  # (bs, nj)
-        listener_embs = self.listener_embedding(listener_id)  # (bs, nj, emb_dim)
-        listener_embs = torch.stack(
-            [listener_embs for i in range(time)], dim=2
-        )  # (bs, nj, time, feat_dim)
-
-        # encoder and inject listener embedding
-        mag_sgram = mag_sgram.unsqueeze(1)
-        encoder_outputs = self.encoder(mag_sgram)  # (batch, ch, time, feat_dim)
-        encoder_outputs = encoder_outputs.view(
-            (bs, time, -1)
-        )  # (batch, time, feat_dim)
-        decoder_inputs = torch.stack(
-            [encoder_outputs for i in range(actual_num_listeners)], dim=1
-        )  # (bs, nj, time, feat_dim)
-        decoder_inputs = torch.cat(
-            [decoder_inputs, listener_embs], dim=-1
-        )  # concat along feature dimension
-
+    
+    def mean_net_inference_p1(self, waveform, waveform_lengths):
+        # ssl model forward
+        all_encoder_outputs, _ = self.ssl_model(
+            waveform, waveform_lengths
+        )
+        encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
+        return encoder_outputs
+    
+    def mean_net_inference_p2(self, encoder_outputs):
         # mean net
-        if self.use_mean_net:
-            mean_net_inputs = encoder_outputs
-            if self.mean_net_type == "rnn":
-                mean_net_outputs, (h, c) = self.mean_net_rnn(mean_net_inputs)
-            else:
-                mean_net_outputs = mean_net_inputs
-            mean_net_outputs = self.mean_net_dnn(
-                mean_net_outputs
-            )  # [batch, time, 1 (scalar) / 5 (categorical)]
-
-        # decoder
-        if self.decoder_type == "rnn":
-            decoder_outputs = decoder_inputs.view((bs * actual_num_listeners, time, -1))
-            decoder_outputs, (h, c) = self.decoder_rnn(decoder_outputs)
-        else:
-            decoder_outputs = decoder_inputs
-        decoder_outputs = self.decoder_dnn(
-            decoder_outputs
+        mean_net_outputs = self.mean_net_dnn(
+            encoder_outputs
         )  # [batch, time, 1 (scalar) / 5 (categorical)]
-        decoder_outputs = decoder_outputs.view(
-            (bs, actual_num_listeners, time, -1)
-        )  # (bs, nj, time, 1/5)
+        mean_net_outputs = mean_net_outputs.squeeze(-1)
+        scores = torch.mean(mean_net_outputs, dim=1)
 
-        if self.output_type == "scalar":
-            decoder_outputs = decoder_outputs.squeeze(-1)  # (bs, nj, time)
-            posterior_scores = torch.mean(decoder_outputs, dim=2)
-            ld_scores = torch.mean(decoder_outputs, dim=1)  # (bs, time)
-        elif self.output_type == "categorical":
-            ld_posterior = torch.nn.functional.softmax(decoder_outputs, dim=-1)
-            ld_scores = torch.inner(
-                ld_posterior, torch.Tensor([1, 2, 3, 4, 5]).to(device)
-            )
-            posterior_scores = torch.mean(ld_scores, dim=2)
-            ld_scores = torch.mean(ld_scores, dim=1)  # (bs, time)
-
-        # define scores
-        scores = torch.mean(ld_scores, dim=1)
-
-        return {"scores": scores, "posterior_scores": posterior_scores}
+        return scores

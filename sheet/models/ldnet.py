@@ -109,13 +109,17 @@ class LDNet(torch.nn.Module):
     def get_num_params(self):
         return sum(p.numel() for n, p in self.named_parameters())
 
-    def forward(self, mag_sgram, mag_sgram_lengths, listener_ids):
+    def forward(self, inputs):
         """Calculate forward propagation.
         Args:
             mag_sgram has shape (batch, time, dim)
             listener_ids has shape (batch)
         """
-        batch, time, dim = mag_sgram.shape
+        mag_sgram = inputs["mag_sgram"]
+        mag_sgram_lengths = inputs["mag_sgram_lengths"]
+        listener_ids  = inputs["listener_idxs"]
+
+        batch, time, _ = mag_sgram.shape
 
         # get listener embedding
         listener_embs = self.listener_embeddings(listener_ids)  # (batch, emb_dim)
@@ -154,18 +158,23 @@ class LDNet(torch.nn.Module):
         )  # [batch, time, 1 (scalar) / 5 (categorical)]
 
         # define scores
-        mean_scores = mean_net_outputs if self.use_mean_net else None
-        ld_scores = decoder_outputs
+        ret = {
+            "frame_lengths": mag_sgram_lengths,
+            "mean_scores": mean_net_outputs if self.use_mean_net else None,
+            "ld_scores": decoder_outputs
+        }
+        
 
-        return {"mean_scores": mean_scores, "ld_scores": ld_scores}
+        return ret
 
-    def mean_listener_inference(self, mag_sgram, mag_sgram_lengths):
+    def mean_listener_inference(self, inputs):
         """Mean listener inference.
         Args:
             mag_sgram has shape (batch, time, dim)
         """
 
         assert self.use_mean_listener
+        mag_sgram = inputs["mag_sgram"]
         batch, time, dim = mag_sgram.shape
         device = mag_sgram.device
 

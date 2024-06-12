@@ -145,6 +145,8 @@ def main():
         csv_path=args.csv_path,
         target_sample_rate=config["sampling_rate"],
         model_input=config["model_input"],
+        use_phoneme=config.get("use_phoneme", False),
+        symbols=config.get("symbols", None),
         wav_only=True,
         allow_cache=False,
     )
@@ -198,19 +200,25 @@ def main():
                 for j, batch in enumerate(dataset):
                     # set up model input
                     model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-                    model_input_lengths = model_input.new_tensor(
-                        [model_input.size(1)]
-                    ).long()
+                    model_lengths = model_input.new_tensor(
+                            [model_input.size(1)]
+                        ).long()
+                    inputs = {
+                        config["model_input"]: model_input,
+                        config["model_input"] + "_lengths": model_lengths
+                    }
+                    if "phoneme_idxs" in batch:
+                        inputs["phoneme_idxs"] = batch["phoneme_idxs"].unsqueeze(0).to(device)
+                        inputs["phoneme_lengths"] = batch["phoneme_lengths"]
+                    if "reference_idxs" in batch:
+                        inputs["reference_idxs"] = batch["reference_idxs"].unsqueeze(0).to(device)
+                        inputs["reference_lengths"] = batch["reference_lengths"]
 
                     # model forward
                     if config["inference_mode"] == "mean_listener":
-                        outputs = model.mean_listener_inference(
-                            model_input, model_input_lengths
-                        )
+                        outputs = model.mean_listener_inference(inputs)
                     elif config["inference_mode"] == "mean_net":
-                        outputs = model.mean_net_inference(
-                            model_input, model_input_lengths
-                        )
+                        outputs = model.mean_net_inference(inputs)
                     else:
                         raise NotImplementedError
 
@@ -258,17 +266,25 @@ def main():
             for batch in pbar:
                 # set up model input
                 model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-                model_input_lengths = model_input.new_tensor(
-                    [model_input.size(1)]
-                ).long()
+                model_lengths = model_input.new_tensor(
+                        [model_input.size(1)]
+                    ).long()
+                inputs = {
+                    config["model_input"]: model_input,
+                    config["model_input"] + "_lengths": model_lengths
+                }
+                if "phoneme_idxs" in batch:
+                    inputs["phoneme_idxs"] = torch.tensor(batch["phoneme_idxs"], dtype=torch.long).unsqueeze(0).to(device)
+                    inputs["phoneme_lengths"] = torch.tensor([len(batch["phoneme_idxs"])], dtype=torch.long)
+                if "reference_idxs" in batch:
+                    inputs["reference_idxs"] = torch.tensor(batch["reference_idxs"], dtype=torch.long).unsqueeze(0).to(device)
+                    inputs["reference_lengths"] = torch.tensor([len(batch["reference_idxs"])], dtype=torch.long)
 
                 # model forward
                 if config["inference_mode"] == "mean_listener":
-                    outputs = model.mean_listener_inference(
-                        model_input, model_input_lengths
-                    )
+                    outputs = model.mean_listener_inference(inputs)
                 elif config["inference_mode"] == "mean_net":
-                    outputs = model.mean_net_inference(model_input, model_input_lengths)
+                    outputs = model.mean_net_inference(inputs)
                 else:
                     raise NotImplementedError
 

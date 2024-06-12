@@ -18,7 +18,7 @@ conf=conf/ssl-mos-wav2vec2.yaml
 
 # dataset configuration
 db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus
-bvcc_db_root=/data/group1/z44476r/Corpora/BVCC/main/DATA
+# db_root=downloads/NISQA_Corpus
 target_sampling_rate=16000
 
 # training related setting
@@ -27,8 +27,7 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
            
 # decoding related setting
-# test_sets="LIVETALK FOR P501"
-test_sets="bvcc_dev bvcc_test LIVETALK FOR P501"
+test_sets="LIVETALK FOR P501"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -44,8 +43,7 @@ set -euo pipefail
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
 
-    # Just provide instructions?
-
+    local/data_download.sh ${db_root}
 fi
 
 mkdir -p "data"
@@ -75,13 +73,6 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     # combine sim and live
     utils/combine_datasets.py --original-paths "data/train_sim.csv" "data/train_live.csv" --out "data/train.csv"
     utils/combine_datasets.py --original-paths "data/dev_sim.csv" "data/dev_live.csv" --out "data/dev.csv"
-
-    # BVCC dev & test sets
-    ../bvcc/local/data_prep.py \
-        --original-path "${bvcc_db_root}/sets/DEVSET" --wavdir "${bvcc_db_root}/wav" --out "data/bvcc_dev.csv"
-    ../bvcc/local/data_prep.py \
-        --original-path "${bvcc_db_root}/sets/TESTSET" --wavdir "${bvcc_db_root}/wav" --out "data/bvcc_test.csv"
-
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then

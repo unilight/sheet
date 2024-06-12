@@ -39,6 +39,16 @@ class NonIntrusiveCollater(object):
             items["listener_idxs"] = torch.LongTensor(
                 [sorted_batch[i]["listener_idx"] for i in range(bs)]
             )
+        
+        # phoneme and reference
+        if "phoneme_idxs" in all_keys:
+            phonemes = [torch.LongTensor(sorted_batch[i]["phoneme_idxs"]) for i in range(bs)]
+            items["phoneme_lengths"] = torch.from_numpy(np.array([phoneme.size(0) for phoneme in phonemes]))
+            items["phoneme_idxs"] = pad_sequence(phonemes, batch_first=True)
+        if "reference_idxs" in all_keys:
+            references = [torch.LongTensor(sorted_batch[i]["reference_idxs"]) for i in range(bs)]
+            items["reference_lengths"] = torch.from_numpy(np.array([reference.size(0) for reference in references]))
+            items["reference_idxs"] = pad_sequence(references, batch_first=True)
 
         # ids
         items["system_ids"] = [sorted_batch[i]["system_id"] for i in range(bs)]
