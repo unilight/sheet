@@ -49,10 +49,10 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
     ../somos/local/data_prep.py \
-        --original-path "${somos_db_root}/training_files/split1/clean/VALIDSET" --wavdir "${somos_db_root}/audios" --out "data/somos_dev.csv" \
+        --original-path "${somos_db_root}/training_files/split1/clean/VALIDSET" --wavdir "${somos_db_root}/audios" --out "../somos/data/somos_dev.csv" \
         --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${somos_db_root}/audios_${target_sampling_rate}" 
     ../somos/local/data_prep.py \
-        --original-path "${somos_db_root}/training_files/split1/clean/TESTSET" --wavdir "${somos_db_root}/audios" --out "data/somos_test.csv" \
+        --original-path "${somos_db_root}/training_files/split1/clean/TESTSET" --wavdir "${somos_db_root}/audios" --out "../somos/data/somos_test.csv" \
         --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${somos_db_root}/audios_${target_sampling_rate}" 
 fi
 
@@ -85,7 +85,7 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
             inference.py \
                 --config "${expdir}/config.yml" \
-                --csv-path "data/${name}.csv" \
+                --csv-path "../somos/data/${name}.csv" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --model-averaging "${model_averaging}" \

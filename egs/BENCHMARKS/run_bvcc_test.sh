@@ -48,9 +48,9 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
     ../bvcc/local/data_prep.py \
-        --original-path "${bvcc_db_root}/sets/DEVSET" --wavdir "${bvcc_db_root}/wav" --out "data/bvcc_dev.csv"
+        --original-path "${bvcc_db_root}/sets/DEVSET" --wavdir "${bvcc_db_root}/wav" --out "../bvcc/data/bvcc_dev.csv"
     ../bvcc/local/data_prep.py \
-        --original-path "${bvcc_db_root}/sets/TESTSET" --wavdir "${bvcc_db_root}/wav" --out "data/bvcc_test.csv"
+        --original-path "${bvcc_db_root}/sets/TESTSET" --wavdir "${bvcc_db_root}/wav" --out "../bvcc/data/bvcc_test.csv"
 fi
 
 if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
@@ -82,7 +82,7 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
             inference.py \
                 --config "${expdir}/config.yml" \
-                --csv-path "data/${name}.csv" \
+                --csv-path "../bvcc/data/${name}.csv" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --model-averaging "${model_averaging}" \

@@ -28,9 +28,9 @@ You can train your own speech quality predictor using the datasets we support. U
 
 Inside each recipe, after the model training is done, you can run zero-shot prediction on other datasets and benchmarks. This can be done by running `run_XXX_test.sh` in each recipe. They are symbolic links to the scripts in the `egs/BENCHMARKS` folder.
 
-## Supported Datasets
+## Supported Training datasets
 
-Currently we support the following datasets:
+Currently we support (and have tested) training recipes on the following datasets:
 
 - BVCC
     - Dataset download link: https://zenodo.org/records/6572573
@@ -45,15 +45,25 @@ Currently we support the following datasets:
     - Paper link: [[arXiv version](https://arxiv.org/abs/2104.09494)]
     - Recipe: `egs/nisqa`
 
-
 ## Supported Benchmarks
 
-In addition to the test sets provided in the datasets above, we plan to support the following benchmarks:
+In addition to the test sets provided in the datasets above, you can do zero-shot evaluation on the following benchmarks.
+For usage, see [egs/BENCHMARK/README.md](egs/BENCHMARK)
+
+- VoiceMOS Challenge 2023 (BC2023, SVCC2023, TMHINTQI-(S))
+    - Paper link: [[arXiv version](https://arxiv.org/abs/2310.02640)]
+    - Recipe: `egs/BENCHMARK/run_vmc23_test.sh`
+
+Of course you can also do zero-shot benchmarking on the test sets of the training datasets:
+
+- BVCC: `egs/BENCHMARK/run_bvcc_test.sh`
+- SOMOS: `egs/BENCHMARK/run_somos_test.sh`
+- NISQA: `egs/BENCHMARK/run_nisqa_test.sh`
+    
+In the future, we plan to support the following additional benchmarks:
 
 - VoiceMOS Challenge 2022 OOD track
-- VoiceMOS Challenge 2023 (BC2023, SVCC2023, TMHINTQI-(S))
 - VoiceMOS Challenge 2024
-
 
 ## Supported Models
 

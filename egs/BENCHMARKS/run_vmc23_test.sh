@@ -17,13 +17,14 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-nisqa_db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus
+# db_root=/data/group1/z44476r/Corpora/vmc23
+db_root=../vmc23/downloads
 
 # training related setting
 tag=""     # tag for directory to save model
            
 # decoding related setting
-test_sets="LIVETALK FOR P501"
+test_sets="vmc23_track1_test vmc23_track2_test vmc23_track3_test"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -39,18 +40,20 @@ set -euo pipefail
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
 
-    local/data_download.sh ${db_root}
+    ../vmc23/local/data_download.sh ${db_root}
 fi
+
 
 mkdir -p "data"
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
-    for test_set in ${test_sets}; do
-        ../nisqa/local/data_prep.py \
-            --original-path "${nisqa_db_root}/NISQA_TEST_${test_set}/NISQA_TEST_${test_set}_file.csv" \
-            --wavdir "${nisqa_db_root}/NISQA_TEST_${test_set}/deg" \
-            --out "../nisqa/data/nisqa_${test_set}.csv" 
+    for track in track1 track2 track3; do
+        ../vmc23/local/data_prep.py \
+            --original-path "${db_root}/${track}" \
+            --wavdir "${db_root}/${track}" \
+            --answer_path "../vmc23/answers/${track}_answer.txt" \
+            --out "../vmc23/data/vmc23_${track}_test.csv"
     done
 fi
 
@@ -76,14 +79,13 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     fi
 
     for name in ${test_sets}; do
-        name="nisqa_${name}"
         [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
         [ "${n_gpus}" -gt 1 ] && n_gpus=1
         echo "Inference start. See the progress via ${outdir}/${name}/inference.log."
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
             inference.py \
                 --config "${expdir}/config.yml" \
-                --csv-path "../nisqa/data/${name}.csv" \
+                --csv-path "../vmc23/data/${name}.csv" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --model-averaging "${model_averaging}" \

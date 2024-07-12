@@ -13,9 +13,11 @@ from multiprocessing import Manager
 import numpy as np
 import torchaudio
 from torch.utils.data import Dataset
+import torch.nn.functional as F
 
 from sheet.utils import read_csv
 
+MIN_REQUIRED_WAV_LENGTH = 1040
 
 class NonIntrusiveDataset(Dataset):
     """PyTorch compatible mel-to-mel dataset for parallel VC."""
@@ -144,7 +146,15 @@ class NonIntrusiveDataset(Dataset):
                         sample_rate, self.target_sample_rate, dtype=waveform.dtype
                     )
                 waveform = self.resamplers[resampler_key](waveform)
-            item["waveform"] = waveform.squeeze(-1)
+            
+            waveform = waveform.squeeze(-1)
+
+            # always pad to a minumum length
+            if waveform.shape[0] < MIN_REQUIRED_WAV_LENGTH:
+                to_pad = (MIN_REQUIRED_WAV_LENGTH - waveform.shape[0]) // 2
+                waveform = F.pad(waveform, (to_pad, to_pad), "constant", 0)
+            
+            item["waveform"] = waveform
             if self.allow_cache:
                 self.wav_caches[hash_id] = item["waveform"]
 
