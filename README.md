@@ -44,6 +44,22 @@ Currently we support (and have tested) training recipes on the following dataset
     - Dataset download link: https://github.com/gabrielmittag/NISQA/wiki/NISQA-Corpus
     - Paper link: [[arXiv version](https://arxiv.org/abs/2104.09494)]
     - Recipe: `egs/nisqa`
+- TMHINT-QI
+    - Dataset download link: https://drive.google.com/file/d/1TMDiz6dnS76hxyeAcCQxeSqqEOH4UDN0/view?usp=sharing
+    - Paper link: [[INTERSPEECH 2022 version](https://www.isca-speech.org/archive/pdfs/interspeech_2022/chen22i_interspeech.pdf)]
+    - Recipe: `egs/tmhint-qi`
+- PSTN
+    - Dataset download link: https://challenge.blob.core.windows.net/pstn/train.zip
+    - Paper link: [[arXiv version](https://arxiv.org/abs/2007.14598)]
+    - Recipe: `egs/pstn`
+- Tencent
+    - Dataset download link: https://www.dropbox.com/s/ocmn78uh2lu5iwg/TencentCorups.zip?dl=0
+    - Paper link: [[arXiv version](https://arxiv.org/abs/2203.16032)]
+    - Recipe: `egs/tencent`
+- SingMOS
+    - Dataset download link: https://drive.google.com/file/d/1DtzZhk3M_jsxUxirPcFRoBhq-dsinOWN/view?usp=drive_link
+    - Paper link: [[arXiv version](https://arxiv.org/abs/2406.10911)]
+    - Recipe: `egs/singmos`
 
 ## Supported Benchmarks
 

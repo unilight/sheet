@@ -10,6 +10,7 @@ import argparse
 import logging
 import os
 import pickle
+from prettytable import PrettyTable, MARKDOWN
 import time
 from collections import defaultdict
 
@@ -325,6 +326,21 @@ def main():
     logging.info(
         f'[UTT][ MSE = {results["utt_MSE"]:.3f} | LCC = {results["utt_LCC"]:.3f} | SRCC = {results["utt_SRCC"]:.3f} ] [SYS][ MSE = {results["sys_MSE"]:.3f} | LCC = {results["sys_LCC"]:.4f} | SRCC = {results["sys_SRCC"]:.4f} ]\n'
     )
+    
+    table = PrettyTable()
+    table.set_style(MARKDOWN)
+    table.field_names = ["Utt MSE", "Utt LCC", "Utt SRCC", "Utt KTAU", "Sys MSE", "Sys LCC", "Sys SRCC", "Sys KTAU"]
+    table.add_row([
+        round(results["utt_MSE"], 3),
+        round(results["utt_LCC"], 3),
+        round(results["utt_SRCC"], 3),
+        round(results["utt_KTAU"], 3),
+        round(results["sys_MSE"], 3),
+        round(results["sys_LCC"], 3),
+        round(results["sys_SRCC"], 3),
+        round(results["sys_KTAU"], 3)
+    ])
+    print(table)
 
     # check directory
     dirname = args.outdir
