@@ -10,7 +10,6 @@ import math
 
 import torch
 import torch.nn as nn
-
 from sheet.modules.ldnet.modules import Projection
 from sheet.modules.utils import make_non_pad_mask
 
@@ -27,6 +26,8 @@ class SSLMOS(torch.nn.Module):
         # mean net related
         mean_net_dnn_dim: int = 64,
         mean_net_output_type: str = "scalar",
+        mean_net_output_dim: int = 5,
+        mean_net_output_step: float = 0.25,
         mean_net_range_clipping: bool = True,
         # listener related
         use_listener_modeling: bool = False,
@@ -61,6 +62,8 @@ class SSLMOS(torch.nn.Module):
             mean_net_dnn_dim,
             nn.ReLU,
             mean_net_output_type,
+            mean_net_output_dim,
+            mean_net_output_step,
             mean_net_range_clipping,
         )
 
@@ -153,7 +156,7 @@ class SSLMOS(torch.nn.Module):
         # return lengths for masked loss calculation
         ret = {
             "waveform_lengths": waveform_lengths,
-            "frame_lengths": encoder_outputs_lens
+            "frame_lengths": encoder_outputs_lens,
         }
 
         # define scores
@@ -178,21 +181,19 @@ class SSLMOS(torch.nn.Module):
         # mean net
         decoder_inputs = encoder_outputs
         mean_net_outputs = self.mean_net_dnn(
-            decoder_inputs
+            decoder_inputs, inference=True
         )  # [batch, time, 1 (scalar) / 5 (categorical)]
         mean_net_outputs = mean_net_outputs.squeeze(-1)
         scores = torch.mean(mean_net_outputs, dim=1)
 
         return {"scores": scores}
-    
+
     def mean_net_inference_p1(self, waveform, waveform_lengths):
         # ssl model forward
-        all_encoder_outputs, _ = self.ssl_model(
-            waveform, waveform_lengths
-        )
+        all_encoder_outputs, _ = self.ssl_model(waveform, waveform_lengths)
         encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
         return encoder_outputs
-    
+
     def mean_net_inference_p2(self, encoder_outputs):
         # mean net
         mean_net_outputs = self.mean_net_dnn(

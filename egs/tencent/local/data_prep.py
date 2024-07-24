@@ -15,20 +15,23 @@ import sys
 
 from sheet.utils import read_csv
 
+
 def main():
     """Run training process."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--original-path",
         required=True,
-        nargs='+',
+        nargs="+",
         help=("original csv file paths. For the Tencent corpus we take two."),
     )
     parser.add_argument(
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."),
+        help=(
+            "directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -41,7 +44,9 @@ def main():
         required=True,
         type=str,
         choices=["train", "dev", "test"],
-        help=("setname. Since there is no dev set, we need to randomly sample dev set on our own."),
+        help=(
+            "setname. Since there is no dev set, we need to randomly sample dev set on our own."
+        ),
     )
     parser.add_argument(
         "--dev_ratio",
@@ -74,11 +79,12 @@ def main():
         # deg_wav,mos
         current_metadata = []
         for line in filelist:
-            if len(line) == 0: continue
+            if len(line) == 0:
+                continue
             wav_path = line["deg_wav"].replace("./", "")
             score = float(line["mos"])
             sample_id = wav_path.replace(".wav", "").replace(os.sep, "_")
-            system_id = sample_id # no system ID information
+            system_id = sample_id  # no system ID information
             item = {
                 "wav_path": os.path.join(args.wavdir, wav_path),
                 "score": score,
@@ -101,11 +107,12 @@ def main():
     # write csv
     logging.info("Writing output csv file.")
     fieldnames = ["wav_path", "score", "system_id", "sample_id"]
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

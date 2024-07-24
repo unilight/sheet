@@ -10,10 +10,9 @@ import time
 from collections import defaultdict
 
 import torch
+from sheet.utils.model_io import freeze_modules
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
-
-from sheet.utils.model_io import freeze_modules
 
 
 class Trainer(object):

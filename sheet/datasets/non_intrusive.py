@@ -11,13 +11,13 @@ from collections import defaultdict
 from multiprocessing import Manager
 
 import numpy as np
-import torchaudio
-from torch.utils.data import Dataset
 import torch.nn.functional as F
-
+import torchaudio
 from sheet.utils import read_csv
+from torch.utils.data import Dataset
 
 MIN_REQUIRED_WAV_LENGTH = 1040
+
 
 class NonIntrusiveDataset(Dataset):
     """PyTorch compatible mel-to-mel dataset for parallel VC."""
@@ -31,6 +31,8 @@ class NonIntrusiveDataset(Dataset):
         use_mean_listener=False,
         use_phoneme=False,
         symbols=None,
+        categorical=False,
+        categorical_step=1.0,
         allow_cache=False,
     ):
         """Initialize dataset.
@@ -47,6 +49,8 @@ class NonIntrusiveDataset(Dataset):
             self.symbols = symbols
         self.resamplers = {}
         assert csv_path != ""
+        self.categorical = categorical
+        self.categorical_step = categorical_step
 
         # set model input transform
         self.model_input = model_input
@@ -116,7 +120,13 @@ class NonIntrusiveDataset(Dataset):
 
     def __getitem__(self, idx):
         item = self.metadata[idx]
+
+        # handle score
         item["score"] = float(item["score"])  # cast from str to int
+        if self.categorical:
+            # we assume the score always starts from 1
+            item["score"] = int((item["score"] - 1) // self.categorical_step)
+
         if "listener_idx" in item:
             item["listener_idx"] = int(item["listener_idx"])  # cast from str to int
         hash_id = item["hash_id"]
@@ -125,10 +135,14 @@ class NonIntrusiveDataset(Dataset):
         if self.use_phoneme:
             if "phoneme" in item:
                 if "phoneme_idxs" not in item:
-                    item["phoneme_idxs"] = [self.symbols.index(p) for p in item["phoneme"]]
+                    item["phoneme_idxs"] = [
+                        self.symbols.index(p) for p in item["phoneme"]
+                    ]
             if "reference" in item:
                 if "reference_idxs" not in item:
-                    item["reference_idxs"] = [self.symbols.index(p) for p in item["reference"]]
+                    item["reference_idxs"] = [
+                        self.symbols.index(p) for p in item["reference"]
+                    ]
 
         # fetch waveform. return cached item if exists
         if self.allow_cache and len(self.wav_caches[hash_id]) != 0:
@@ -146,14 +160,14 @@ class NonIntrusiveDataset(Dataset):
                         sample_rate, self.target_sample_rate, dtype=waveform.dtype
                     )
                 waveform = self.resamplers[resampler_key](waveform)
-            
+
             waveform = waveform.squeeze(-1)
 
             # always pad to a minumum length
             if waveform.shape[0] < MIN_REQUIRED_WAV_LENGTH:
                 to_pad = (MIN_REQUIRED_WAV_LENGTH - waveform.shape[0]) // 2
                 waveform = F.pad(waveform, (to_pad, to_pad), "constant", 0)
-            
+
             item["waveform"] = waveform
             if self.allow_cache:
                 self.wav_caches[hash_id] = item["waveform"]
@@ -191,6 +205,11 @@ class NonIntrusiveDataset(Dataset):
         # fill back into metadata
         for i, item in enumerate(self.metadata):
             self.metadata[i]["avg_score"] = sample_avg_score[item["sample_id"]]
+            if self.categorical:
+                # we assume the score always starts from 1
+                self.metadata[i]["avg_score"] = int(
+                    (self.metadata[i]["avg_score"] - 1) // self.categorical_step
+                )
 
     def gen_mean_listener_metadata(self):
         mean_listener_metadata = []

@@ -10,19 +10,16 @@ import argparse
 import logging
 import os
 import pickle
-from prettytable import PrettyTable, MARKDOWN
 import time
 from collections import defaultdict
 
 import numpy as np
-import soundfile as sf
-import torch
-import yaml
-from tqdm import tqdm
-
 import sheet
 import sheet.datasets
 import sheet.models
+import torch
+import yaml
+from prettytable import MARKDOWN, PrettyTable
 from sheet.evaluation.metrics import calculate
 from sheet.evaluation.plot import (
     plot_sys_level_scatter,
@@ -31,6 +28,7 @@ from sheet.evaluation.plot import (
 )
 from sheet.utils.model_io import model_average
 from sheet.utils.types import str2bool
+from tqdm import tqdm
 
 
 def main():
@@ -201,18 +199,20 @@ def main():
                 for j, batch in enumerate(dataset):
                     # set up model input
                     model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-                    model_lengths = model_input.new_tensor(
-                            [model_input.size(1)]
-                        ).long()
+                    model_lengths = model_input.new_tensor([model_input.size(1)]).long()
                     inputs = {
                         config["model_input"]: model_input,
-                        config["model_input"] + "_lengths": model_lengths
+                        config["model_input"] + "_lengths": model_lengths,
                     }
                     if "phoneme_idxs" in batch:
-                        inputs["phoneme_idxs"] = batch["phoneme_idxs"].unsqueeze(0).to(device)
+                        inputs["phoneme_idxs"] = (
+                            batch["phoneme_idxs"].unsqueeze(0).to(device)
+                        )
                         inputs["phoneme_lengths"] = batch["phoneme_lengths"]
                     if "reference_idxs" in batch:
-                        inputs["reference_idxs"] = batch["reference_idxs"].unsqueeze(0).to(device)
+                        inputs["reference_idxs"] = (
+                            batch["reference_idxs"].unsqueeze(0).to(device)
+                        )
                         inputs["reference_lengths"] = batch["reference_lengths"]
 
                     # model forward
@@ -267,19 +267,29 @@ def main():
             for batch in pbar:
                 # set up model input
                 model_input = batch[config["model_input"]].unsqueeze(0).to(device)
-                model_lengths = model_input.new_tensor(
-                        [model_input.size(1)]
-                    ).long()
+                model_lengths = model_input.new_tensor([model_input.size(1)]).long()
                 inputs = {
                     config["model_input"]: model_input,
-                    config["model_input"] + "_lengths": model_lengths
+                    config["model_input"] + "_lengths": model_lengths,
                 }
                 if "phoneme_idxs" in batch:
-                    inputs["phoneme_idxs"] = torch.tensor(batch["phoneme_idxs"], dtype=torch.long).unsqueeze(0).to(device)
-                    inputs["phoneme_lengths"] = torch.tensor([len(batch["phoneme_idxs"])], dtype=torch.long)
+                    inputs["phoneme_idxs"] = (
+                        torch.tensor(batch["phoneme_idxs"], dtype=torch.long)
+                        .unsqueeze(0)
+                        .to(device)
+                    )
+                    inputs["phoneme_lengths"] = torch.tensor(
+                        [len(batch["phoneme_idxs"])], dtype=torch.long
+                    )
                 if "reference_idxs" in batch:
-                    inputs["reference_idxs"] = torch.tensor(batch["reference_idxs"], dtype=torch.long).unsqueeze(0).to(device)
-                    inputs["reference_lengths"] = torch.tensor([len(batch["reference_idxs"])], dtype=torch.long)
+                    inputs["reference_idxs"] = (
+                        torch.tensor(batch["reference_idxs"], dtype=torch.long)
+                        .unsqueeze(0)
+                        .to(device)
+                    )
+                    inputs["reference_lengths"] = torch.tensor(
+                        [len(batch["reference_idxs"])], dtype=torch.long
+                    )
 
                 # model forward
                 if config["inference_mode"] == "mean_listener":
@@ -326,20 +336,31 @@ def main():
     logging.info(
         f'[UTT][ MSE = {results["utt_MSE"]:.3f} | LCC = {results["utt_LCC"]:.3f} | SRCC = {results["utt_SRCC"]:.3f} ] [SYS][ MSE = {results["sys_MSE"]:.3f} | LCC = {results["sys_LCC"]:.4f} | SRCC = {results["sys_SRCC"]:.4f} ]\n'
     )
-    
+
     table = PrettyTable()
     table.set_style(MARKDOWN)
-    table.field_names = ["Utt MSE", "Utt LCC", "Utt SRCC", "Utt KTAU", "Sys MSE", "Sys LCC", "Sys SRCC", "Sys KTAU"]
-    table.add_row([
-        round(results["utt_MSE"], 3),
-        round(results["utt_LCC"], 3),
-        round(results["utt_SRCC"], 3),
-        round(results["utt_KTAU"], 3),
-        round(results["sys_MSE"], 3),
-        round(results["sys_LCC"], 3),
-        round(results["sys_SRCC"], 3),
-        round(results["sys_KTAU"], 3)
-    ])
+    table.field_names = [
+        "Utt MSE",
+        "Utt LCC",
+        "Utt SRCC",
+        "Utt KTAU",
+        "Sys MSE",
+        "Sys LCC",
+        "Sys SRCC",
+        "Sys KTAU",
+    ]
+    table.add_row(
+        [
+            round(results["utt_MSE"], 3),
+            round(results["utt_LCC"], 3),
+            round(results["utt_SRCC"], 3),
+            round(results["utt_KTAU"], 3),
+            round(results["sys_MSE"], 3),
+            round(results["sys_LCC"], 3),
+            round(results["sys_SRCC"], 3),
+            round(results["sys_KTAU"], 3),
+        ]
+    )
     print(table)
 
     # check directory

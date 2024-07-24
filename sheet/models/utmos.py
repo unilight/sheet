@@ -10,7 +10,6 @@ import math
 
 import torch
 import torch.nn as nn
-
 from sheet.modules.ldnet.modules import Projection
 from sheet.modules.utils import make_non_pad_mask
 
@@ -62,22 +61,31 @@ class UTMOS(torch.nn.Module):
         else:
             raise NotImplementedError
         decoder_input_dim = ssl_model_output_dim
-        
+
         # define phoneme encoder
         self.use_phoneme = use_phoneme
         self.use_reference = use_reference
         if self.use_phoneme:
-            self.phoneme_embedding = nn.Embedding(phoneme_encoder_vocab_size, phoneme_encoder_emb_dim)
-            self.phoneme_encoder_lstm = nn.LSTM(phoneme_encoder_emb_dim, phoneme_encoder_dim,
-                                num_layers=phoneme_encoder_n_lstm_layers, dropout=0.1, bidirectional=True)
+            self.phoneme_embedding = nn.Embedding(
+                phoneme_encoder_vocab_size, phoneme_encoder_emb_dim
+            )
+            self.phoneme_encoder_lstm = nn.LSTM(
+                phoneme_encoder_emb_dim,
+                phoneme_encoder_dim,
+                num_layers=phoneme_encoder_n_lstm_layers,
+                dropout=0.1,
+                bidirectional=True,
+            )
             if self.use_reference:
-                
-                phoneme_encoder_linear_input_dim = phoneme_encoder_dim + phoneme_encoder_dim
+
+                phoneme_encoder_linear_input_dim = (
+                    phoneme_encoder_dim + phoneme_encoder_dim
+                )
             else:
                 phoneme_encoder_linear_input_dim = phoneme_encoder_dim
             self.phoneme_encoder_linear = nn.Sequential(
                 nn.Linear(phoneme_encoder_linear_input_dim, phoneme_encoder_out_dim),
-                nn.ReLU()
+                nn.ReLU(),
             )
             decoder_input_dim += phoneme_encoder_out_dim
 
@@ -96,11 +104,11 @@ class UTMOS(torch.nn.Module):
         self.use_decoder_rnn = use_decoder_rnn
         if self.use_decoder_rnn:
             self.decoder_rnn = nn.LSTM(
-                input_size = decoder_input_dim,
-                hidden_size = decoder_rnn_dim,
-                num_layers = 1,
-                batch_first = True,
-                bidirectional = True
+                input_size=decoder_input_dim,
+                hidden_size=decoder_rnn_dim,
+                num_layers=1,
+                batch_first=True,
+                bidirectional=True,
             )
             decoder_dnn_input_dim = decoder_rnn_dim * 2
         else:
@@ -135,7 +143,9 @@ class UTMOS(torch.nn.Module):
         waveform, waveform_lengths = inputs["waveform"], inputs["waveform_lengths"]
 
         # ssl model forward
-        ssl_model_outputs, ssl_model_output_lengths = self.ssl_model_forward(waveform, waveform_lengths)
+        ssl_model_outputs, ssl_model_output_lengths = self.ssl_model_forward(
+            waveform, waveform_lengths
+        )
         to_concat = [ssl_model_outputs]
         time = ssl_model_outputs.size(1)
 
@@ -154,7 +164,7 @@ class UTMOS(torch.nn.Module):
 
             # NOTE(unilight): is this needed?
             # encoder_outputs = encoder_outputs.view(
-                # (batch, time, -1)
+            # (batch, time, -1)
             # )  # (batch, time, feat_dim)
             to_concat.append(listener_embs)
 
@@ -173,7 +183,7 @@ class UTMOS(torch.nn.Module):
         # return lengths for masked loss calculation
         ret = {
             "waveform_lengths": waveform_lengths,
-            "frame_lengths": ssl_model_output_lengths
+            "frame_lengths": ssl_model_output_lengths,
         }
         if self.use_listener_modeling:
             ret["ld_scores"] = decoder_outputs
@@ -187,7 +197,9 @@ class UTMOS(torch.nn.Module):
         batch = waveform.size(0)
 
         # ssl model forward
-        ssl_model_outputs, ssl_model_output_lengths = self.ssl_model_forward(waveform, waveform_lengths)
+        ssl_model_outputs, ssl_model_output_lengths = self.ssl_model_forward(
+            waveform, waveform_lengths
+        )
         to_concat = [ssl_model_outputs]
         time = ssl_model_outputs.size(1)
 
@@ -199,7 +211,9 @@ class UTMOS(torch.nn.Module):
         # get listener embedding
         if self.use_listener_modeling:
             device = waveform.device
-            listener_ids = (torch.ones(batch, dtype=torch.long) * self.num_listeners - 1).to(
+            listener_ids = (
+                torch.ones(batch, dtype=torch.long) * self.num_listeners - 1
+            ).to(
                 device
             )  # (bs)
             listener_embs = self.listener_embeddings(listener_ids)  # (batch, emb_dim)
@@ -209,7 +223,7 @@ class UTMOS(torch.nn.Module):
 
             # NOTE(unilight): is this needed?
             # encoder_outputs = encoder_outputs.view(
-                # (batch, time, -1)
+            # (batch, time, -1)
             # )  # (batch, time, feat_dim)
             to_concat.append(listener_embs)
 
@@ -226,33 +240,55 @@ class UTMOS(torch.nn.Module):
 
         scores = torch.mean(decoder_outputs.squeeze(-1), dim=1)
         return {"scores": scores}
-    
+
     def ssl_model_forward(self, waveform, waveform_lengths):
         all_ssl_model_outputs, all_ssl_model_output_lengths = self.ssl_model(
             waveform, waveform_lengths
         )
         ssl_model_outputs = all_ssl_model_outputs[self.ssl_model_layer_idx]
-        ssl_model_output_lengths = all_ssl_model_output_lengths[self.ssl_model_layer_idx]
+        ssl_model_output_lengths = all_ssl_model_output_lengths[
+            self.ssl_model_layer_idx
+        ]
         return ssl_model_outputs, ssl_model_output_lengths
-    
+
     def phoneme_encoder_forward(self, inputs, time):
         phoneme, phoneme_lengths = inputs["phoneme_idxs"], inputs["phoneme_lengths"]
         phoneme_embeddings = self.phoneme_embedding(phoneme)
         phoneme_embeddings = torch.nn.utils.rnn.pack_padded_sequence(
-            phoneme_embeddings, phoneme_lengths, batch_first=True, enforce_sorted=False)
+            phoneme_embeddings, phoneme_lengths, batch_first=True, enforce_sorted=False
+        )
         _, (phoneme_encoder_outputs, _) = self.phoneme_encoder_lstm(phoneme_embeddings)
-        phoneme_encoder_outputs = phoneme_encoder_outputs[-1] + phoneme_encoder_outputs[0]
+        phoneme_encoder_outputs = (
+            phoneme_encoder_outputs[-1] + phoneme_encoder_outputs[0]
+        )
         if self.use_reference:
-            assert "reference_idxs" in inputs and "reference_lengths" in inputs, "reference and reference_lenghts should not be None when use_reference is True"
-            reference, reference_lengths = inputs["reference_idxs"], inputs["reference_lengths"]
+            assert (
+                "reference_idxs" in inputs and "reference_lengths" in inputs
+            ), "reference and reference_lenghts should not be None when use_reference is True"
+            reference, reference_lengths = (
+                inputs["reference_idxs"],
+                inputs["reference_lengths"],
+            )
             reference_embeddings = self.phoneme_embedding(reference)
             reference_embeddings = torch.nn.utils.rnn.pack_padded_sequence(
-                reference_embeddings, reference_lengths, batch_first=True, enforce_sorted=False)
-            _, (reference_encoder_outputs, _) = self.phoneme_encoder_lstm(reference_embeddings)
-            reference_encoder_outputs = reference_encoder_outputs[-1] + reference_encoder_outputs[0]
-            phoneme_encoder_outputs = self.phoneme_encoder_linear(torch.cat([phoneme_encoder_outputs, reference_encoder_outputs],1))
+                reference_embeddings,
+                reference_lengths,
+                batch_first=True,
+                enforce_sorted=False,
+            )
+            _, (reference_encoder_outputs, _) = self.phoneme_encoder_lstm(
+                reference_embeddings
+            )
+            reference_encoder_outputs = (
+                reference_encoder_outputs[-1] + reference_encoder_outputs[0]
+            )
+            phoneme_encoder_outputs = self.phoneme_encoder_linear(
+                torch.cat([phoneme_encoder_outputs, reference_encoder_outputs], 1)
+            )
         else:
-            phoneme_encoder_outputs = self.phoneme_encoder_linear(phoneme_encoder_outputs)
+            phoneme_encoder_outputs = self.phoneme_encoder_linear(
+                phoneme_encoder_outputs
+            )
 
         # expand
         phoneme_encoder_outputs = torch.stack(

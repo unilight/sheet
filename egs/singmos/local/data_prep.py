@@ -14,6 +14,7 @@ import sys
 
 from sheet.utils import read_csv
 
+
 def main():
     """Run training process."""
     parser = argparse.ArgumentParser()
@@ -27,7 +28,9 @@ def main():
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."),
+        help=(
+            "directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -54,7 +57,8 @@ def main():
     metadata = []
     listener_idxs, count = {}, 0
     for line in filelist:
-        if len(line) == 0: continue
+        if len(line) == 0:
+            continue
         sample_id = line[0]
         score = float(line[1])
         system_id = sample_id.split("-")[2]
@@ -70,11 +74,12 @@ def main():
     # write csv
     logging.info("Writing output csv file.")
     fieldnames = ["wav_path", "score", "system_id", "sample_id"]
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

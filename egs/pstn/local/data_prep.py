@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 from sheet.utils import read_csv
 
+
 def main():
     """Run training process."""
     parser = argparse.ArgumentParser()
@@ -30,7 +31,9 @@ def main():
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."),
+        help=(
+            "directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -40,7 +43,7 @@ def main():
     )
     parser.add_argument(
         "--resample",
-        action='store_true',
+        action="store_true",
         help=("whether to perform resampling or not."),
     )
     parser.add_argument(
@@ -65,7 +68,9 @@ def main():
         required=True,
         type=str,
         choices=["train", "dev", "test"],
-        help=("setname. Since there is no dev set, we need to randomly sample dev set on our own."),
+        help=(
+            "setname. Since there is no dev set, we need to randomly sample dev set on our own."
+        ),
     )
     parser.add_argument(
         "--dev_ratio",
@@ -106,21 +111,31 @@ def main():
     metadata = []
     listener_idxs, count = {}, 0
     for line in tqdm(filelist):
-        if len(line) == 0: continue
+        if len(line) == 0:
+            continue
         wav_path = line["filename"]
         complete_wav_path = os.path.join(args.wavdir, line["filename"])
         sample_id = os.path.splitext(line["filename"])[0].split("_")[0]
         score = float(line["MOS"])
-        system_id = sample_id # there is no system ID information in PSTN...
-        
+        system_id = sample_id  # there is no system ID information in PSTN...
+
         # if resample and resample is necessary
-        if args.resample and librosa.get_samplerate(complete_wav_path) != args.target_sampling_rate:
+        if (
+            args.resample
+            and librosa.get_samplerate(complete_wav_path) != args.target_sampling_rate
+        ):
             resampled_wav_path = os.path.join(args.target_wavdir, wav_path)
             # resample and write if not exist yet
             if not os.path.isfile(resampled_wav_path):
                 if args.resample_backend == "librosa":
-                    resampled_wav, _ = librosa.load(complete_wav_path, sr=args.target_sampling_rate)
-                sf.write(resampled_wav_path, resampled_wav, samplerate=args.target_sampling_rate)
+                    resampled_wav, _ = librosa.load(
+                        complete_wav_path, sr=args.target_sampling_rate
+                    )
+                sf.write(
+                    resampled_wav_path,
+                    resampled_wav,
+                    samplerate=args.target_sampling_rate,
+                )
             complete_wav_path = resampled_wav_path
 
         item = {
@@ -144,11 +159,12 @@ def main():
     # write csv
     logging.info("Writing output csv file.")
     fieldnames = ["wav_path", "score", "system_id", "sample_id"]
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

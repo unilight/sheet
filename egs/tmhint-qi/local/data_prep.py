@@ -15,6 +15,7 @@ import sys
 
 from sheet.utils import read_csv, find_files
 
+
 def main():
     """Run training process."""
     parser = argparse.ArgumentParser()
@@ -28,14 +29,18 @@ def main():
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."),
+        help=(
+            "directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."
+        ),
     )
     parser.add_argument(
         "--setname",
         required=True,
         type=str,
         choices=["train", "dev", "test"],
-        help=("setname. Since there is no dev set, we need to randomly sample dev set on our own."),
+        help=(
+            "setname. Since there is no dev set, we need to randomly sample dev set on our own."
+        ),
     )
     parser.add_argument(
         "--dev_ratio",
@@ -71,7 +76,7 @@ def main():
     filelist, _ = read_csv(args.original_path, dict_reader=True)
 
     # Get the wav files first
-    wav_files = find_files(args.wavdir) # this returns the full path
+    wav_files = find_files(args.wavdir)  # this returns the full path
 
     # shuffle and split
     random.shuffle(wav_files)
@@ -87,7 +92,8 @@ def main():
     logging.info("Preparing metadata.")
     metadata = []
     for line in filelist:
-        if len(line) == 0: continue
+        if len(line) == 0:
+            continue
         method = line["method"]
         snr = line["snr"]
         noise = line["noise"]
@@ -111,11 +117,12 @@ def main():
     # write csv
     logging.info("Writing output csv file.")
     fieldnames = ["wav_path", "score", "system_id", "sample_id"]
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

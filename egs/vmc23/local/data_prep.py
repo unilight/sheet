@@ -15,6 +15,7 @@ import sys
 from sheet.utils import read_csv
 from sheet.utils.types import str2bool
 
+
 def main():
     """Run training process."""
     parser = argparse.ArgumentParser()
@@ -28,7 +29,9 @@ def main():
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because we put absolute paths in the csv files."),
+        help=(
+            "directory of the waveform files. This is needed because we put absolute paths in the csv files."
+        ),
     )
     parser.add_argument(
         "--answer_path",
@@ -63,18 +66,22 @@ def main():
     logging.info("Preparing metadata.")
     metadata = []
     for line in filelist:
-        if len(line) == 0: continue
+        if len(line) == 0:
+            continue
         sample_id = line[0]
         score = float(line[1])
 
         # decide system id based on track
         if "Track1" in sample_id:
-            system_id = "-".join(sample_id.split("_")[0].split("-")[1:]) # "A-AD"
+            system_id = "-".join(sample_id.split("_")[0].split("-")[1:])  # "A-AD"
         elif "Track2" in sample_id:
-            system_id = sample_id.split("-")[1] # "B01"
+            system_id = sample_id.split("-")[1]  # "B01"
         elif "Track3" in sample_id:
-            system_id = "_".join(sample_id.split("-")[1].split("_")[:-3]) # "Noisy_snr5_white_TMHINT" or "clean_TMHINT"
-            if system_id == "TMHINT": continue # only accept "clean_TMHINT" but not "TMHINT"
+            system_id = "_".join(
+                sample_id.split("-")[1].split("_")[:-3]
+            )  # "Noisy_snr5_white_TMHINT" or "clean_TMHINT"
+            if system_id == "TMHINT":
+                continue  # only accept "clean_TMHINT" but not "TMHINT"
         item = {
             "wav_path": os.path.join(args.wavdir, sample_id + ".wav"),
             "score": score,
@@ -87,11 +94,12 @@ def main():
     # write csv
     logging.info("Writing output csv file.")
     fieldnames = ["wav_path", "score", "system_id", "sample_id"]
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

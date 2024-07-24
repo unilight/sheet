@@ -134,3 +134,4 @@ data/
 *.done
 *.wav
 *.txt
+egs/playground/

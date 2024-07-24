@@ -10,32 +10,19 @@ import argparse
 import logging
 import os
 import sys
-import time
-from collections import OrderedDict, defaultdict
 
 import humanfriendly
 
-# set to avoid matplotlib error in CLI environment
-import matplotlib
 import numpy as np
-import soundfile as sf
-import torch
-import yaml
-from tensorboardX import SummaryWriter
-from torch.utils.data import DataLoader
-from tqdm import tqdm
-
 import sheet
 import sheet.collaters
 import sheet.datasets
 import sheet.losses
 import sheet.models
 import sheet.trainers
-from sheet.utils import read_hdf5
-from sheet.utils.types import str_or_none
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+import torch
+import yaml
+from torch.utils.data import DataLoader
 
 from sheet.schedulers import get_scheduler
 
@@ -190,6 +177,8 @@ def main():
         use_phoneme=config.get("use_phoneme", False),
         symbols=config.get("symbols", None),
         use_mean_listener=config["model_params"]["use_mean_listener"],
+        categorical=config.get("categorical", False),
+        categorical_step=config.get("categorical_step", 1.0),
         allow_cache=config["allow_cache"],
     )
     logging.info(f"The number of training files = {len(train_dataset)}.")
@@ -273,10 +262,10 @@ def main():
         criterion["mean_score_criterions"] = [
             {
                 "type": criterion_dict["criterion_type"],
-                "criterion": getattr(
-                    sheet.losses, criterion_dict["criterion_type"]
-                )(**criterion_dict["criterion_params"]),
-                "weight": criterion_dict["criterion_weight"]
+                "criterion": getattr(sheet.losses, criterion_dict["criterion_type"])(
+                    **criterion_dict["criterion_params"]
+                ),
+                "weight": criterion_dict["criterion_weight"],
             }
             for criterion_dict in config["mean_score_criterions"]
         ]
@@ -284,10 +273,10 @@ def main():
         criterion["listener_score_criterions"] = [
             {
                 "type": criterion_dict["criterion_type"],
-                "criterion": getattr(
-                    sheet.losses, criterion_dict["criterion_type"]
-                )(**criterion_dict["criterion_params"]),
-                "weight": criterion_dict["criterion_weight"]
+                "criterion": getattr(sheet.losses, criterion_dict["criterion_type"])(
+                    **criterion_dict["criterion_params"]
+                ),
+                "weight": criterion_dict["criterion_weight"],
             }
             for criterion_dict in config["listener_score_criterions"]
         ]

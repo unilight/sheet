@@ -14,6 +14,7 @@ import sys
 
 from sheet.utils import read_csv
 
+
 def main():
     """Run training process."""
     parser = argparse.ArgumentParser()
@@ -27,7 +28,9 @@ def main():
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."),
+        help=(
+            "directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -35,10 +38,7 @@ def main():
         type=str,
         help=("output csv file path."),
     )
-    parser.add_argument(
-        "--generate-listener-id",
-        action='store_true'
-    )
+    parser.add_argument("--generate-listener-id", action="store_true")
     args = parser.parse_args()
 
     # set logger
@@ -58,7 +58,8 @@ def main():
     metadata = []
     listener_idxs, count = {}, 0
     for line in filelist:
-        if len(line) == 0: continue
+        if len(line) == 0:
+            continue
         system_id = line[0]
         wav_path = line[1]
         sample_id = os.path.splitext(wav_path.split("-")[1])[0]
@@ -83,11 +84,12 @@ def main():
     fieldnames = ["wav_path", "score", "system_id", "sample_id", "listener_id"]
     if args.generate_listener_id:
         fieldnames.append("listener_idx")
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

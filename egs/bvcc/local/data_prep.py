@@ -15,6 +15,7 @@ import sys
 from sheet.utils import read_csv
 from sheet.utils.types import str2bool
 
+
 def main():
     """Run training process."""
     parser = argparse.ArgumentParser()
@@ -28,7 +29,9 @@ def main():
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."),
+        help=(
+            "directory of the waveform files. This is needed because wav paths in BVCC metadata files do not contain the wav directory."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -37,15 +40,13 @@ def main():
         help=("output csv file path."),
     )
     parser.add_argument(
-        "--generate-listener-id",
-        action='store_true',
-        help=("generate listener ID.")
+        "--generate-listener-id", action="store_true", help=("generate listener ID.")
     )
     parser.add_argument(
         "--use-precalculated-text",
         type=str2bool,
         default=True,
-        help=("use pre-calculated transcription. if false, perform calculation")
+        help=("use pre-calculated transcription. if false, perform calculation"),
     )
     args = parser.parse_args()
 
@@ -58,16 +59,18 @@ def main():
 
     # download pre-calculated text
     if args.use_precalculated_text:
-        textpath = os.path.join("downloads", 'text')
+        textpath = os.path.join("downloads", "text")
         if not os.path.isfile(textpath):
             os.makedirs("downloads", exist_ok=True)
-            os.system(f"wget -O {textpath} https://raw.githubusercontent.com/sarulab-speech/UTMOS22/master/strong/transcriptions_clustered.csv")
+            os.system(
+                f"wget -O {textpath} https://raw.githubusercontent.com/sarulab-speech/UTMOS22/master/strong/transcriptions_clustered.csv"
+            )
         lines, _ = read_csv(textpath, dict_reader=True)
         texts = {
             line["wav_name"].replace(".wav", ""): {
                 "phoneme": line["transcription"],
                 "cluster": line["cluster"],
-                "reference": line["reference"]
+                "reference": line["reference"],
             }
             for line in lines
         }
@@ -84,7 +87,8 @@ def main():
     metadata = []
     listener_idxs, count = {}, 0
     for line in filelist:
-        if len(line) == 0: continue
+        if len(line) == 0:
+            continue
         system_id = line[0]
         wav_path = line[1]
         sample_id = os.path.splitext(wav_path.split("-")[1])[0]
@@ -112,14 +116,24 @@ def main():
 
     # write csv
     logging.info("Writing output csv file.")
-    fieldnames = ["wav_path", "score", "system_id", "sample_id", "listener_id", "phoneme", "cluster", "reference"]
+    fieldnames = [
+        "wav_path",
+        "score",
+        "system_id",
+        "sample_id",
+        "listener_id",
+        "phoneme",
+        "cluster",
+        "reference",
+    ]
     if args.generate_listener_id:
         fieldnames.append("listener_idx")
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

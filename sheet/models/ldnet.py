@@ -10,7 +10,6 @@ import math
 
 import torch
 import torch.nn as nn
-
 from sheet.modules.ldnet.modules import STRIDE, MobileNetV3ConvBlocks, Projection
 
 
@@ -117,7 +116,7 @@ class LDNet(torch.nn.Module):
         """
         mag_sgram = inputs["mag_sgram"]
         mag_sgram_lengths = inputs["mag_sgram_lengths"]
-        listener_ids  = inputs["listener_idxs"]
+        listener_ids = inputs["listener_idxs"]
 
         batch, time, _ = mag_sgram.shape
 
@@ -161,9 +160,8 @@ class LDNet(torch.nn.Module):
         ret = {
             "frame_lengths": mag_sgram_lengths,
             "mean_scores": mean_net_outputs if self.use_mean_net else None,
-            "ld_scores": decoder_outputs
+            "ld_scores": decoder_outputs,
         }
-        
 
         return ret
 

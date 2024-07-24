@@ -17,6 +17,7 @@ from tqdm import tqdm
 
 from sheet.utils import read_csv
 
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -29,7 +30,9 @@ def main():
         "--wavdir",
         required=True,
         type=str,
-        help=("directory of the waveform files. This is needed because wav paths in the metadata files do not contain the wav directory."),
+        help=(
+            "directory of the waveform files. This is needed because wav paths in the metadata files do not contain the wav directory."
+        ),
     )
     parser.add_argument(
         "--out",
@@ -37,13 +40,10 @@ def main():
         type=str,
         help=("output csv file path."),
     )
-    parser.add_argument(
-        "--generate-listener-id",
-        action='store_true'
-    )
+    parser.add_argument("--generate-listener-id", action="store_true")
     parser.add_argument(
         "--resample",
-        action='store_true',
+        action="store_true",
         help=("whether to perform resampling or not."),
     )
     parser.add_argument(
@@ -89,7 +89,8 @@ def main():
     metadata = []
     listener_idxs, count = {}, 0
     for line in tqdm(filelist):
-        if len(line) == 0: continue
+        if len(line) == 0:
+            continue
         system_id = line["systemId"]
         sample_id = line["utteranceId"]
         wav_path = os.path.join(args.wavdir, sample_id)
@@ -97,16 +98,23 @@ def main():
         listener_id = line["listenerId"]
 
         # if resample and resample is necessary
-        if args.resample and librosa.get_samplerate(wav_path) != args.target_sampling_rate:
+        if (
+            args.resample
+            and librosa.get_samplerate(wav_path) != args.target_sampling_rate
+        ):
             resampled_wav_path = os.path.join(args.target_wavdir, sample_id)
             # resample and write if not exist yet
             if not os.path.isfile(resampled_wav_path):
                 if args.resample_backend == "librosa":
-                    resampled_wav, _ = librosa.load(wav_path, sr=args.target_sampling_rate)
-                sf.write(resampled_wav_path, resampled_wav, samplerate=args.target_sampling_rate)
+                    resampled_wav, _ = librosa.load(
+                        wav_path, sr=args.target_sampling_rate
+                    )
+                sf.write(
+                    resampled_wav_path,
+                    resampled_wav,
+                    samplerate=args.target_sampling_rate,
+                )
             wav_path = resampled_wav_path
-
-
 
         item = {
             "wav_path": wav_path,
@@ -127,11 +135,12 @@ def main():
     fieldnames = ["wav_path", "score", "system_id", "sample_id", "listener_id"]
     if args.generate_listener_id:
         fieldnames.append("listener_idx")
-    with open(args.out, 'w', newline='') as csvfile:
+    with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for line in metadata:
             writer.writerow(line)
+
 
 if __name__ == "__main__":
     main()

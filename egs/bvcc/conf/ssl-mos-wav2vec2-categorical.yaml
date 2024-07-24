@@ -7,6 +7,7 @@ collater_type: NonIntrusiveCollater
 trainer_type: NonIntrusiveEstimatorTrainer
 sampling_rate: 16000                # Sampling rate.
 model_input: waveform               # choices: waveform, mag_sgram
+use_phoneme: False                  # only True for UTMOS
 
 ###########################################################
 #              NETWORK ARCHITECTURE SETTING               #
@@ -19,7 +20,9 @@ model_params:
     ssl_model_layer_idx: -1
 
     mean_net_dnn_dim: 64
-    mean_net_output_type: "scalar"
+    mean_net_output_type: "categorical"
+    mean_net_output_dim: 17 # formula: (5 - 1) / categorical_step + 1
+    mean_net_output_step: 0.25
     mean_net_range_clipping: True
 
     use_listener_modeling: False
@@ -29,11 +32,9 @@ model_params:
 #                      LOSS SETTING                       #
 ###########################################################
 mean_score_criterions:
-    - criterion_type: "ScalarLoss"
+    - criterion_type: "CategoricalLoss"
       criterion_weight: 1.0
       criterion_params:
-        order: 1
-        tau: 0.5
         masked_loss: False
 listener_score_criterions: null
 
@@ -55,6 +56,8 @@ wav_only: True              # Reduce to average only even for the training data.
 pin_memory: true            # Whether to pin memory in Pytorch DataLoader.
 num_workers: 0              # Number of workers in Pytorch DataLoader.
 allow_cache: true           # Whether to allow cache in dataset. If true, it requires cpu memory.
+categorical: true
+categorical_step: 0.25
 
 ###########################################################
 #             OPTIMIZER & SCHEDULER SETTING               #

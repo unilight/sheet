@@ -10,18 +10,24 @@ from functools import partial
 from typing import List
 
 import torch
-from torch import nn
-
 from sheet.modules.ldnet.mobilenetv2 import ConvBNActivation
 from sheet.modules.ldnet.mobilenetv3 import InvertedResidual as InvertedResidualV3
 from sheet.modules.ldnet.mobilenetv3 import InvertedResidualConfig
+from torch import nn
 
 STRIDE = 3
 
 
 class Projection(nn.Module):
     def __init__(
-        self, in_dim, hidden_dim, activation, output_type, range_clipping=False
+        self,
+        in_dim,
+        hidden_dim,
+        activation,
+        output_type,
+        _output_dim,
+        output_step,
+        range_clipping=False,
     ):
         super(Projection, self).__init__()
         self.output_type = output_type
@@ -31,7 +37,8 @@ class Projection(nn.Module):
             if range_clipping:
                 self.proj = nn.Tanh()
         elif output_type == "categorical":
-            output_dim = 5
+            output_dim = _output_dim
+            self.output_step = output_step
         else:
             raise NotImplementedError("wrong output_type: {}".format(output_type))
 
@@ -42,14 +49,21 @@ class Projection(nn.Module):
             nn.Linear(hidden_dim, output_dim),
         )
 
-    def forward(self, x):
+    def forward(self, x, inference=False):
         output = self.net(x)
 
-        # range clipping
-        if self.output_type == "scalar" and self.range_clipping:
-            return self.proj(output) * 2.0 + 3
+        # scalar / categorical
+        if self.output_type == "scalar":
+            # range clipping
+            if self.range_clipping:
+                return self.proj(output) * 2.0 + 3
+            else:
+                return output
         else:
-            return output
+            if inference:
+                return torch.argmax(output, dim=-1) * self.output_step + 1
+            else:
+                return output
 
 
 class MobileNetV3ConvBlocks(nn.Module):

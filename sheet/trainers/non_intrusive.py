@@ -13,7 +13,6 @@ import matplotlib
 import numpy as np
 import soundfile as sf
 import torch
-
 from sheet.evaluation.metrics import calculate
 
 # from sheet.utils.model_io import (
@@ -70,8 +69,13 @@ class NonIntrusiveEstimatorTrainer(Trainer):
         # set inputs
         gen_loss = 0.0
         inputs = {
-            self.config["model_input"]: batch[self.config["model_input"]].to(self.device),
-            self.config["model_input"] + "_lengths": batch[self.config["model_input"] + "_lengths"].to(self.device),
+            self.config["model_input"]: batch[self.config["model_input"]].to(
+                self.device
+            ),
+            self.config["model_input"]
+            + "_lengths": batch[self.config["model_input"] + "_lengths"].to(
+                self.device
+            ),
         }
         if "listener_idxs" in batch:
             inputs["listener_idxs"] = batch["listener_idxs"].to(self.device)
@@ -94,20 +98,30 @@ class NonIntrusiveEstimatorTrainer(Trainer):
             for criterion_dict in self.criterion["mean_score_criterions"]:
                 # always pass the following arguments
                 loss = criterion_dict["criterion"](
-                    outputs["mean_scores"], gt_avg_scores, outputs["frame_lengths"], self.device
+                    outputs["mean_scores"],
+                    gt_avg_scores,
+                    outputs["frame_lengths"],
+                    self.device,
                 )
                 gen_loss += loss * criterion_dict["weight"]
-                self.total_train_loss["train/mean_"+criterion_dict["type"]] += loss.item()
+                self.total_train_loss[
+                    "train/mean_" + criterion_dict["type"]
+                ] += loss.item()
 
         # listener loss
         if "listener_score_criterions" in self.criterion:
             for criterion_dict in self.criterion["listener_score_criterions"]:
                 # always pass the following arguments
                 loss = criterion_dict["criterion"](
-                    outputs["ld_scores"], gt_scores, outputs["frame_lengths"], self.device
+                    outputs["ld_scores"],
+                    gt_scores,
+                    outputs["frame_lengths"],
+                    self.device,
                 )
                 gen_loss += loss * criterion_dict["weight"]
-                self.total_train_loss["train/listener_"+criterion_dict["type"]] += loss.item()
+                self.total_train_loss[
+                    "train/listener_" + criterion_dict["type"]
+                ] += loss.item()
 
         self.total_train_loss["train/loss"] += gen_loss.item()
 
@@ -133,8 +147,13 @@ class NonIntrusiveEstimatorTrainer(Trainer):
 
         # set up model input
         inputs = {
-            self.config["model_input"]: batch[self.config["model_input"]].to(self.device),
-            self.config["model_input"] + "_lengths": batch[self.config["model_input"] + "_lengths"].to(self.device),
+            self.config["model_input"]: batch[self.config["model_input"]].to(
+                self.device
+            ),
+            self.config["model_input"]
+            + "_lengths": batch[self.config["model_input"] + "_lengths"].to(
+                self.device
+            ),
         }
         if "phoneme_idxs" in batch:
             inputs["phoneme_idxs"] = batch["phoneme_idxs"].to(self.device)

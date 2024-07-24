@@ -27,27 +27,35 @@ class NonIntrusiveCollater(object):
         all_keys = list(sorted_batch[0].keys())
 
         # score & listener id
-        items["scores"] = torch.FloatTensor(
-            [sorted_batch[i]["score"] for i in range(bs)]
+        items["scores"] = torch.tensor(
+            [sorted_batch[i]["score"] for i in range(bs)], dtype=torch.float
         )
-        items["avg_scores"] = torch.FloatTensor(
-            [sorted_batch[i]["avg_score"] for i in range(bs)]
+        items["avg_scores"] = torch.tensor(
+            [sorted_batch[i]["avg_score"] for i in range(bs)], dtype=torch.float
         )
         if "listener_id" in all_keys:
             items["listener_ids"] = [sorted_batch[i]["listener_id"] for i in range(bs)]
         if "listener_idx" in all_keys:
-            items["listener_idxs"] = torch.LongTensor(
-                [sorted_batch[i]["listener_idx"] for i in range(bs)]
+            items["listener_idxs"] = torch.tensor(
+                [sorted_batch[i]["listener_idx"] for i in range(bs)], dtype=torch.long
             )
-        
+
         # phoneme and reference
         if "phoneme_idxs" in all_keys:
-            phonemes = [torch.LongTensor(sorted_batch[i]["phoneme_idxs"]) for i in range(bs)]
-            items["phoneme_lengths"] = torch.from_numpy(np.array([phoneme.size(0) for phoneme in phonemes]))
+            phonemes = [
+                torch.LongTensor(sorted_batch[i]["phoneme_idxs"]) for i in range(bs)
+            ]
+            items["phoneme_lengths"] = torch.from_numpy(
+                np.array([phoneme.size(0) for phoneme in phonemes])
+            )
             items["phoneme_idxs"] = pad_sequence(phonemes, batch_first=True)
         if "reference_idxs" in all_keys:
-            references = [torch.LongTensor(sorted_batch[i]["reference_idxs"]) for i in range(bs)]
-            items["reference_lengths"] = torch.from_numpy(np.array([reference.size(0) for reference in references]))
+            references = [
+                torch.LongTensor(sorted_batch[i]["reference_idxs"]) for i in range(bs)
+            ]
+            items["reference_lengths"] = torch.from_numpy(
+                np.array([reference.size(0) for reference in references])
+            )
             items["reference_idxs"] = pad_sequence(references, batch_first=True)
 
         # ids
