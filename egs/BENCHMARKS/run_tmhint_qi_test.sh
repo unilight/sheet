@@ -11,22 +11,20 @@ stage=-1       # stage to start
 stop_stage=100 # stage to stop
 verbose=1      # verbosity level (lower is less info)
 n_gpus=1       # number of gpus in training
-n_jobs=16      # number of parallel jobs in feature extraction
 seed=1337
 
 conf=conf/ssl-mos-wav2vec2.yaml
+meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-db_root=/data/group1/z44476r/Corpora/SingMOS/DATA
+tmhintqi_db_root=/data/group1/z44476r/Corpora/tmhint-qi
 target_sampling_rate=16000
 
 # training related setting
 tag=""     # tag for directory to save model
-resume=""  # checkpoint path to resume training
-           # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
            
 # decoding related setting
-test_sets="singmos_dev singmos_test"
+test_sets="tmhintqi_dev tmhintqi_test"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -42,58 +40,30 @@ set -euo pipefail
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
 
-    local/data_download.sh ${db_root}
+    local/data_download.sh ${tmhintqi_db_root}
 fi
 
-mkdir -p "data"
+
+mkdir -p "../tmhint-qi/data"
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
-    # parse original csv file to an unified format
-    local/data_prep.py \
-        --original-path "${db_root}/sets/train_mos_list.txt" --wavdir "${db_root}/wav" --out "data/singmos_train.csv" 
-    local/data_prep.py \
-        --original-path "${db_root}/sets/val_mos_list.txt" --wavdir "${db_root}/wav" --out "data/singmos_dev.csv"
-    local/data_prep.py \
-        --original-path "${db_root}/sets/eval_mos_list.txt" --wavdir "${db_root}/wav" --out "data/singmos_test.csv"
+    ../tmhint-qi/local/data_prep.py \
+        --original-path "${tmhintqi_db_root}/raw_data.csv" --wavdir "${tmhintqi_db_root}/train" --setname "dev" --out "../tmhint-qi/data/tmhintqi_dev.csv" --seed "${seed}"
+    ../tmhint-qi/local/data_prep.py \
+        --original-path "${tmhintqi_db_root}/raw_data.csv" --wavdir "${tmhintqi_db_root}/test" --setname "test" --out "../tmhint-qi/data/tmhintqi_test.csv" --seed "${seed}"
 fi
 
-if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
-    echo "stage 1: Feature extraction"
-    echo "No feature extraction needed currently"
-fi
-
-if [ -z ${tag} ]; then
-    expname="$(basename ${conf%.*})-${seed}"
-else
-    expname="${tag}-${seed}"
-fi
-expdir=exp/${expname}
-if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
-    echo "Stage 2: Network training"
-    [ ! -e "${expdir}" ] && mkdir -p "${expdir}"
-    if [ "${n_gpus}" -gt 1 ]; then
-        echo "Not Implemented yet."
-        # train="python -m seq2seq_vc.distributed.launch --nproc_per_node ${n_gpus} -c parallel-wavegan-train"
-    else
-        train="train.py"
-    fi
-    echo "Training start. See the progress via ${expdir}/train.log."
-    ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train.log" \
-        ${train} \
-            --config "${conf}" \
-            --train-csv-path "data/singmos_train.csv" \
-            --dev-csv-path "data/singmos_dev.csv" \
-            --outdir "${expdir}" \
-            --resume "${resume}" \
-            --verbose "${verbose}" \
-            --seed "${seed}"
-    echo "Successfully finished training."
-fi
-
-if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
-    echo "Stage 3: Inference"
+if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
+    echo "Stage 1: Inference"
     # shellcheck disable=SC2012
+
+    if [ -z ${tag} ]; then
+        expname="$(basename ${conf%.*})-${seed}"
+    else
+        expname="${tag}-${seed}"
+    fi
+    expdir=exp/${expname}
 
     if [ "${use_stacking}" = "True" ]; then
         [ -z "${meta_model_checkpoint}" ] && meta_model_checkpoint="${expdir}/meta_model.pkl"
@@ -112,7 +82,7 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
             inference.py \
                 --config "${expdir}/config.yml" \
-                --csv-path "data/${name}.csv" \
+                --csv-path "../tmhint-qi/data/${name}.csv" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --model-averaging "${model_averaging}" \

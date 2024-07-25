@@ -26,7 +26,7 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
            
 # decoding related setting
-test_sets="dev test"
+test_sets="bvcc_dev bvcc_test"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -45,9 +45,9 @@ if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     local/data_download.sh ${db_root}
 fi
 
-train_set="data/train.csv"
-dev_set="data/dev.csv"
-test_set="data/test.csv"
+train_set="data/bvcc_train.csv"
+dev_set="data/bvcc_dev.csv"
+test_set="data/bvcc_test.csv"
 
 mkdir -p "data"
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
@@ -102,7 +102,7 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train_stack.log" \
         train_stack.py \
             --meta-model-config "${meta_model_conf}" \
-            --csv-path "data/dev.csv" \
+            --csv-path "data/bvcc_dev.csv" \
             --expdir "${expdir}" \
             --verbose "${verbose}"
     echo "Successfully finished stacking model training."

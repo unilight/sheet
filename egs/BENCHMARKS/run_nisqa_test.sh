@@ -42,7 +42,7 @@ if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     local/data_download.sh ${db_root}
 fi
 
-mkdir -p "data"
+mkdir -p "../nisqa/data"
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 

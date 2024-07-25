@@ -17,8 +17,8 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-# db_root=/data/group1/z44476r/Corpora/vmc23
-db_root=../vmc23/downloads
+db_root=/data/group1/z44476r/Corpora/vmc23
+# db_root=../vmc23/downloads
 
 # training related setting
 tag=""     # tag for directory to save model
@@ -44,7 +44,7 @@ if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
 fi
 
 
-mkdir -p "data"
+mkdir -p ../vmc23/data
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
