@@ -7,23 +7,24 @@ collater_type: NonIntrusiveCollater
 trainer_type: NonIntrusiveEstimatorTrainer
 sampling_rate: 16000                # Sampling rate.
 model_input: waveform               # choices: waveform, mag_sgram
+num_domains: 7
 
 ###########################################################
 #              NETWORK ARCHITECTURE SETTING               #
 ###########################################################
-model_type: "SSLMOS"
+model_type: "AlignNet"
 model_params:
     ssl_module: "s3prl"
     s3prl_name: "wav2vec2"
     ssl_model_output_dim: 768
     ssl_model_layer_idx: -1
 
-    mean_net_dnn_dim: 64
-    mean_net_output_type: "scalar"
-    mean_net_range_clipping: True
+    use_domain_modeling: True
+    domain_emb_dim: 128
 
-    use_listener_modeling: False
-    use_mean_listener: False
+    decoder_dnn_dim: 64
+    output_type: "scalar"
+    range_clipping: True # this is needed if output_type is scalar
     
 ###########################################################
 #                      LOSS SETTING                       #
@@ -40,9 +41,9 @@ listener_score_criterions: null
 ###########################################################
 #                   INFERENCE SETTING                     #
 ###########################################################
-inference_mode: mean_net    # this is used for
-                            # (1) evaluation in the training loop
-                            # (2) default inference mode
+inference_mode: mean_listener   # this is used for
+                                # (1) evaluation in the training loop
+                                # (2) default inference mode
 
 ###########################################################
 #                  DATA LOADER SETTING                    #
