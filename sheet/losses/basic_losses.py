@@ -8,7 +8,6 @@
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from sheet.modules.utils import make_non_pad_mask
 
 
@@ -40,7 +39,7 @@ class ScalarLoss(nn.Module):
         loss = torch.mean(threshold * loss)
         return loss
 
-    def forward(self, pred_score, gt_score, lens, device):
+    def forward(self, pred_score, gt_score, device, lens=None):
         """
         Args:
             pred_mean, pred_score: [batch, time, 1/5]

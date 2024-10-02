@@ -181,8 +181,11 @@ class Trainer(object):
         start_time = time.time()
 
         # loop through dev set
-        for eval_steps_per_epoch, batch in enumerate(self.data_loader["dev"], 1):
+        for count, batch in enumerate(self.data_loader["dev"], 1):
             self._eval_step(batch)
+            if "dev_samples_per_eval_loop" in self.config:
+                if count > self.config["dev_samples_per_eval_loop"]:
+                    break
 
         logging.info(
             f"(Steps: {self.steps}) Finished evaluation "
@@ -248,6 +251,7 @@ class Trainer(object):
                 for fname in os.listdir(self.config["outdir"])
                 if os.path.isfile(os.path.join(self.config["outdir"], fname))
                 and fname.endswith("steps.pkl")
+                and not fname.startswith("original")
             ]
             for checkpoint_path in existing_checkpoint_paths:
                 steps = int(

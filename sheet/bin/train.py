@@ -176,7 +176,7 @@ def main():
         wav_only=config.get("wav_only", False),
         use_phoneme=config.get("use_phoneme", False),
         symbols=config.get("symbols", None),
-        use_mean_listener=config["model_params"]["use_mean_listener"],
+        use_mean_listener=config["model_params"].get("use_mean_listener", None),
         categorical=config.get("categorical", False),
         categorical_step=config.get("categorical_step", 1.0),
         allow_cache=config["allow_cache"],
@@ -200,6 +200,11 @@ def main():
     # update number of listeners
     if hasattr(train_dataset, "num_listeners"):
         config["num_listeners"] = train_dataset.num_listeners
+
+    # update number of domains
+    if config.get("num_domains", None) is None:
+        if hasattr(train_dataset, "num_domains"):
+            config["num_domains"] = train_dataset.num_domains
 
     # get data loader
     collater_class = getattr(
@@ -253,6 +258,7 @@ def main():
     model = model_class(
         config["model_input"],
         num_listeners=config.get("num_listeners", None),
+        num_domains=config.get("num_domains", None),
         **config["model_params"],
     ).to(device)
 

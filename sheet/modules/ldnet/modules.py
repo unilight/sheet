@@ -26,7 +26,7 @@ class Projection(nn.Module):
         activation,
         output_type,
         _output_dim,
-        output_step,
+        output_step=1.0,
         range_clipping=False,
     ):
         super(Projection, self).__init__()

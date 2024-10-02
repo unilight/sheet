@@ -39,6 +39,10 @@ class NonIntrusiveCollater(object):
             items["listener_idxs"] = torch.tensor(
                 [sorted_batch[i]["listener_idx"] for i in range(bs)], dtype=torch.long
             )
+        if "domain_idx" in all_keys:
+            items["domain_idxs"] = torch.tensor(
+                [sorted_batch[i]["domain_idx"] for i in range(bs)], dtype=torch.long
+            )
 
         # phoneme and reference
         if "phoneme_idxs" in all_keys:

@@ -15,12 +15,12 @@ import soundfile as sf
 import torch
 from sheet.evaluation.metrics import calculate
 
-# from sheet.utils.model_io import (
-#     filter_modules,
-#     get_partial_state_dict,
-#     transfer_verification,
-#     print_new_keys,
-# )
+from sheet.utils.model_io import (
+    filter_modules,
+    get_partial_state_dict,
+    transfer_verification,
+    print_new_keys,
+)
 from sheet.evaluation.plot import (
     plot_sys_level_scatter,
     plot_utt_level_hist,
@@ -35,33 +35,33 @@ import matplotlib.pyplot as plt
 class NonIntrusiveEstimatorTrainer(Trainer):
     """Customized trainer module for non-intrusive estimator."""
 
-    # def load_trained_modules(self, checkpoint_path, init_mods):
-    #     if self.config["distributed"]:
-    #         main_state_dict = self.model.module.state_dict()
-    #     else:
-    #         main_state_dict = self.model.state_dict()
+    def load_trained_modules(self, checkpoint_path, init_mods):
+        if self.config["distributed"]:
+            main_state_dict = self.model.module.state_dict()
+        else:
+            main_state_dict = self.model.state_dict()
 
-    #     if os.path.isfile(checkpoint_path):
-    #         model_state_dict = torch.load(checkpoint_path, map_location="cpu")["model"]
+        if os.path.isfile(checkpoint_path):
+            model_state_dict = torch.load(checkpoint_path, map_location="cpu")["model"]
 
-    #         # first make sure that all modules in `init_mods` are in `checkpoint_path`
-    #         modules = filter_modules(model_state_dict, init_mods)
+            # first make sure that all modules in `init_mods` are in `checkpoint_path`
+            modules = filter_modules(model_state_dict, init_mods)
 
-    #         # then, actually get the partial state_dict
-    #         partial_state_dict = get_partial_state_dict(model_state_dict, modules)
+            # then, actually get the partial state_dict
+            partial_state_dict = get_partial_state_dict(model_state_dict, modules)
 
-    #         if partial_state_dict:
-    #             if transfer_verification(main_state_dict, partial_state_dict, modules):
-    #                 print_new_keys(partial_state_dict, modules, checkpoint_path)
-    #                 main_state_dict.update(partial_state_dict)
-    #     else:
-    #         logging.error(f"Specified model was not found: {checkpoint_path}")
-    #         exit(1)
+            if partial_state_dict:
+                if transfer_verification(main_state_dict, partial_state_dict, modules):
+                    print_new_keys(partial_state_dict, modules, checkpoint_path)
+                    main_state_dict.update(partial_state_dict)
+        else:
+            logging.error(f"Specified model was not found: {checkpoint_path}")
+            exit(1)
 
-    #     if self.config["distributed"]:
-    #         self.model.module.load_state_dict(main_state_dict)
-    #     else:
-    #         self.model.load_state_dict(main_state_dict)
+        if self.config["distributed"]:
+            self.model.module.load_state_dict(main_state_dict)
+        else:
+            self.model.load_state_dict(main_state_dict)
 
     def _train_step(self, batch):
         """Train model one step."""
@@ -79,6 +79,8 @@ class NonIntrusiveEstimatorTrainer(Trainer):
         }
         if "listener_idxs" in batch:
             inputs["listener_idxs"] = batch["listener_idxs"].to(self.device)
+        if "domain_idxs" in batch:
+            inputs["domain_idxs"] = batch["domain_idxs"].to(self.device)
         if "phoneme_idxs" in batch:
             inputs["phoneme_idxs"] = batch["phoneme_idxs"].to(self.device)
             inputs["phoneme_lengths"] = batch["phoneme_lengths"]
@@ -88,6 +90,12 @@ class NonIntrusiveEstimatorTrainer(Trainer):
 
         # model forward
         outputs = self.model(inputs)
+
+        # get frame lengths if exist
+        if "frame_lengths" in outputs:
+            output_frame_lengths = outputs["frame_lengths"]
+        else:
+            output_frame_lengths = None
 
         # get ground truth scores
         gt_scores = batch["scores"].to(self.device)
@@ -100,8 +108,8 @@ class NonIntrusiveEstimatorTrainer(Trainer):
                 loss = criterion_dict["criterion"](
                     outputs["mean_scores"],
                     gt_avg_scores,
-                    outputs["frame_lengths"],
                     self.device,
+                    lens = output_frame_lengths,
                 )
                 gen_loss += loss * criterion_dict["weight"]
                 self.total_train_loss[
@@ -115,8 +123,8 @@ class NonIntrusiveEstimatorTrainer(Trainer):
                 loss = criterion_dict["criterion"](
                     outputs["ld_scores"],
                     gt_scores,
-                    outputs["frame_lengths"],
                     self.device,
+                    lens = output_frame_lengths,
                 )
                 gen_loss += loss * criterion_dict["weight"]
                 self.total_train_loss[
@@ -155,6 +163,8 @@ class NonIntrusiveEstimatorTrainer(Trainer):
                 self.device
             ),
         }
+        if "domain_idxs" in batch:
+            inputs["domain_idxs"] = batch["domain_idxs"].to(self.device)
         if "phoneme_idxs" in batch:
             inputs["phoneme_idxs"] = batch["phoneme_idxs"].to(self.device)
             inputs["phoneme_lengths"] = batch["phoneme_lengths"]

@@ -18,6 +18,8 @@ meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
 singmos_db_root=/data/group1/z44476r/Corpora/SingMOS/DATA
+datadir="../singmos/data"
+domain_idx=0
 
 # training related setting
 tag=""     # tag for directory to save model
@@ -30,6 +32,7 @@ checkpoint=""               # checkpoint path to be used for decoding
 model_averaging="False"
 use_stacking="False"
 meta_model_checkpoint=""
+np_inference_mode=
                                        
 # shellcheck disable=SC1091
 . utils/parse_options.sh || exit 1;
@@ -43,14 +46,14 @@ if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
 fi
 
 
-mkdir -p "../singmos/data"
+mkdir -p "${datadir}"
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
     ../singmos/local/data_prep.py \
-        --original-path "${singmos_db_root}/sets/val_mos_list.txt" --wavdir "${singmos_db_root}/wav" --out "../singmos/data/singmos_dev.csv"
+        --original-path "${singmos_db_root}/sets/val_mos_list.txt" --wavdir "${singmos_db_root}/wav" --out "${datadir}/singmos_dev.csv" --domain-idx "${domain_idx}"
     ../singmos/local/data_prep.py \
-        --original-path "${singmos_db_root}/sets/eval_mos_list.txt" --wavdir "${singmos_db_root}/wav" --out "../singmos/data/singmos_test.csv"
+        --original-path "${singmos_db_root}/sets/eval_mos_list.txt" --wavdir "${singmos_db_root}/wav" --out "${datadir}/singmos_test.csv" --domain-idx "${domain_idx}"
 fi
 
 if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
@@ -81,12 +84,45 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
             inference.py \
                 --config "${expdir}/config.yml" \
-                --csv-path "../singmos/data/${name}.csv" \
+                --csv-path "${datadir}/${name}.csv" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
                 --model-averaging "${model_averaging}" \
                 --use-stacking "${use_stacking}" \
                 --meta-model-checkpoint "${meta_model_checkpoint}" \
+                --verbose "${verbose}"
+        echo "Successfully finished inference of ${name} set."
+        grep "UTT" "${outdir}/${name}/inference.log"
+    done
+    echo "Successfully finished inference."
+fi
+
+if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
+    echo "Stage 3: Non-parametric inference"
+    # shellcheck disable=SC2012
+
+    if [ -z ${tag} ]; then
+        expname="$(basename ${conf%.*})-${seed}"
+    else
+        expname="${tag}-${seed}"
+    fi
+    expdir=exp/${expname}
+
+    [ -z "${checkpoint}" ] && checkpoint="${expdir}/checkpoint-best.pkl"
+    outdir="${expdir}/results/np_$(basename "${checkpoint}" .pkl)/${np_inference_mode}"
+
+    for name in ${test_sets}; do
+        [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
+        [ "${n_gpus}" -gt 1 ] && n_gpus=1
+        echo "Inference start. See the progress via ${outdir}/${name}/inference.log."
+        ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
+            nonparametric_inference.py \
+                --config "${expdir}/config.yml" \
+                --datastore "${expdir}/datastore/$(basename "${checkpoint}" .pkl)/datastore.h5" \
+                --csv-path "${datadir}/${name}.csv" \
+                --checkpoint "${checkpoint}" \
+                --outdir "${outdir}/${name}" \
+                --np-inference-mode "${np_inference_mode}" \
                 --verbose "${verbose}"
         echo "Successfully finished inference of ${name} set."
         grep "UTT" "${outdir}/${name}/inference.log"

@@ -162,6 +162,7 @@ def main():
     model = model_class(
         config["model_input"],
         num_listeners=config.get("num_listeners", None),
+        num_domains=config.get("num_domains", None),
         **config["model_params"],
     )
 
@@ -246,6 +247,8 @@ def main():
             sys_name = batch["system_id"]
             eval_sys_results["pred_mean_scores"][sys_name].append(pred_mean_scores[i])
             eval_sys_results["true_mean_scores"][sys_name].append(true_mean_scores)
+    
+    # not using stacking
     else:
         # load parameter, or take average
         assert (args.checkpoint == "" and args.model_averaging) or (
@@ -289,6 +292,10 @@ def main():
                     )
                     inputs["reference_lengths"] = torch.tensor(
                         [len(batch["reference_idxs"])], dtype=torch.long
+                    )
+                if "domain_idx" in batch:
+                    inputs["domain_idxs"] = (
+                        torch.tensor(batch["domain_idx"], dtype=torch.long).unsqueeze(0).to(device)
                     )
 
                 # model forward

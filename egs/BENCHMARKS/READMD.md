@@ -10,7 +10,7 @@ Let's say you want to benchmark on `vmc23` (which stands for the VoiceMOS Challe
 
 2. Then, **IN THAT FOLDER**, execute the following:
 ```
-./run.sh --conf XXX.yaml --checkpoint YYY.ckpt
+utils/BENCHMARKS/run_vmc23_test.sh --conf XXX.yaml --checkpoint YYY.ckpt
 ```
 
 ## Recipe structure

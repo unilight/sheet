@@ -11,13 +11,11 @@ import math
 import torch
 import torch.nn as nn
 from sheet.modules.ldnet.modules import Projection
-from sheet.modules.utils import make_non_pad_mask
 
 
 class SSLMOS(torch.nn.Module):
     def __init__(
         self,
-        model_input: str,
         # model related
         ssl_module: str,
         s3prl_name: str,
@@ -34,6 +32,7 @@ class SSLMOS(torch.nn.Module):
         num_listeners: int = None,
         listener_emb_dim: int = None,
         use_mean_listener: bool = True,
+        # decoder related
         decoder_type: str = "ffn",
         decoder_dnn_dim: int = 64,
         output_type: str = "scalar",
@@ -169,14 +168,11 @@ class SSLMOS(torch.nn.Module):
         waveform = inputs["waveform"]
         waveform_lengths = inputs["waveform_lengths"]
 
-        batch, time = waveform.shape
-
         # ssl model forward
         all_encoder_outputs, all_encoder_outputs_lens = self.ssl_model(
             waveform, waveform_lengths
         )
         encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
-        encoder_outputs_lens = all_encoder_outputs_lens[self.ssl_model_layer_idx]
 
         # mean net
         decoder_inputs = encoder_outputs
@@ -184,9 +180,12 @@ class SSLMOS(torch.nn.Module):
             decoder_inputs, inference=True
         )  # [batch, time, 1 (scalar) / 5 (categorical)]
         mean_net_outputs = mean_net_outputs.squeeze(-1)
-        scores = torch.mean(mean_net_outputs, dim=1)
+        scores = torch.mean(mean_net_outputs, dim=1) # [batch]
 
-        return {"scores": scores}
+        return {
+            "ssl_embeddings": encoder_outputs,
+            "scores": scores
+        }
 
     def mean_net_inference_p1(self, waveform, waveform_lengths):
         # ssl model forward
@@ -203,3 +202,13 @@ class SSLMOS(torch.nn.Module):
         scores = torch.mean(mean_net_outputs, dim=1)
 
         return scores
+
+    def get_ssl_embeddings(self, inputs):
+        waveform = inputs["waveform"]
+        waveform_lengths = inputs["waveform_lengths"]
+
+        all_encoder_outputs, all_encoder_outputs_lens = self.ssl_model(
+            waveform, waveform_lengths
+        )
+        encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
+        return encoder_outputs

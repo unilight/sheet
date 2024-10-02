@@ -5,8 +5,6 @@
 
 """Non-intrusive dataset modules."""
 
-import logging
-import os
 from collections import defaultdict
 from multiprocessing import Manager
 
@@ -33,13 +31,22 @@ class NonIntrusiveDataset(Dataset):
         symbols=None,
         categorical=False,
         categorical_step=1.0,
+        no_feat=False,
         allow_cache=False,
     ):
         """Initialize dataset.
 
         Args:
             csv path (str): path to the csv file
+            target_sample_rate (int): resample to this seample rate if there is a mismatch.
+            model_input (str): defalut is wav. is this is mag_sgram, extract magnitute sgram.
             wav_only (bool): whether to return only wavs. Basically this means inference mode.
+            use_mean_listener (bool): whether to use mean listener. (only for datasets with listener labels)
+            use_phoneme (bool): whether to use phoneme. (only for UTMOS training)
+            symbols (str): symbols for phoneme. (only for UTMOS training)
+            categorical (bool): whether to use categorical output.
+            categorical_step (float): step for the categorical output. defauly is 1.0.
+            no_feat (bool): Whether to skip loading features (waveforms, mag_sgrams ...)
             allow_cache (bool): Whether to allow cache of the loaded files.
 
         """
@@ -51,6 +58,7 @@ class NonIntrusiveDataset(Dataset):
         assert csv_path != ""
         self.categorical = categorical
         self.categorical_step = categorical_step
+        self.no_feat = no_feat
 
         # set model input transform
         self.model_input = model_input
@@ -75,6 +83,10 @@ class NonIntrusiveDataset(Dataset):
 
             # get num of listeners
             self.num_listeners = self.get_num_listeners()
+
+        # get num of domains if domain_idx exists
+        if "domain_idx" in self.metadata[0]:
+            self.num_domains = self.get_num_domains()
 
         # build hash
         self.build_feat_hash()
@@ -106,6 +118,13 @@ class NonIntrusiveDataset(Dataset):
             listener_ids.add(item["listener_id"])
         return len(listener_ids)
 
+    def get_num_domains(self):
+        """Get number of domains by counting unique domain idxs"""
+        domain_idxs = set()
+        for item in self.metadata:
+            domain_idxs.add(item["domain_idx"])
+        return len(domain_idxs)
+
     def build_feat_hash(self):
         sample_ids = {}
         count = 0
@@ -129,6 +148,8 @@ class NonIntrusiveDataset(Dataset):
 
         if "listener_idx" in item:
             item["listener_idx"] = int(item["listener_idx"])  # cast from str to int
+        if "domain_idx" in item:
+            item["domain_idx"] = int(item["domain_idx"])  # cast from str to int
         hash_id = item["hash_id"]
 
         # process text
@@ -145,46 +166,48 @@ class NonIntrusiveDataset(Dataset):
                     ]
 
         # fetch waveform. return cached item if exists
-        if self.allow_cache and len(self.wav_caches[hash_id]) != 0:
-            item["waveform"] = self.wav_caches[hash_id]
-        else:
-            # read waveform
-            waveform, sample_rate = torchaudio.load(
-                item["wav_path"], channels_first=False
-            )  # waveform: [T, 1]
-            # resample if needed
-            if sample_rate != self.target_sample_rate:
-                resampler_key = f"{sample_rate}-{self.target_sample_rate}"
-                if resampler_key not in self.resamplers:
-                    self.resamplers[resampler_key] = torchaudio.transforms.Resample(
-                        sample_rate, self.target_sample_rate, dtype=waveform.dtype
-                    )
-                waveform = self.resamplers[resampler_key](waveform)
+        if not self.no_feat:
+            if self.allow_cache and len(self.wav_caches[hash_id]) != 0:
+                item["waveform"] = self.wav_caches[hash_id]
+            else:
+                # read waveform
+                waveform, sample_rate = torchaudio.load(
+                    item["wav_path"], channels_first=False
+                )  # waveform: [T, 1]
+                # resample if needed
+                if sample_rate != self.target_sample_rate:
+                    resampler_key = f"{sample_rate}-{self.target_sample_rate}"
+                    if resampler_key not in self.resamplers:
+                        self.resamplers[resampler_key] = torchaudio.transforms.Resample(
+                            sample_rate, self.target_sample_rate, dtype=waveform.dtype
+                        )
+                    waveform = self.resamplers[resampler_key](waveform)
 
-            waveform = waveform.squeeze(-1)
+                waveform = waveform.squeeze(-1)
 
-            # always pad to a minumum length
-            if waveform.shape[0] < MIN_REQUIRED_WAV_LENGTH:
-                to_pad = (MIN_REQUIRED_WAV_LENGTH - waveform.shape[0]) // 2
-                waveform = F.pad(waveform, (to_pad, to_pad), "constant", 0)
+                # always pad to a minumum length
+                if waveform.shape[0] < MIN_REQUIRED_WAV_LENGTH:
+                    to_pad = (MIN_REQUIRED_WAV_LENGTH - waveform.shape[0]) // 2
+                    waveform = F.pad(waveform, (to_pad, to_pad), "constant", 0)
 
-            item["waveform"] = waveform
-            if self.allow_cache:
-                self.wav_caches[hash_id] = item["waveform"]
+                item["waveform"] = waveform
+                if self.allow_cache:
+                    self.wav_caches[hash_id] = item["waveform"]
 
         # additional feature extraction
-        if self.model_input == "mag_sgram":
-            # fetch mag_sgram. return cached item if exists
-            if self.allow_cache and len(self.mag_sgram_caches[hash_id]) != 0:
-                item["mag_sgram"] = self.mag_sgram_caches[hash_id]
-            else:
-                # torchaudio requires waveform to be [..., T]
-                mag_sgram = self.mag_sgram_transform(
-                    waveform.squeeze(-1)
-                )  # mag_sgram: [freq, T]
-                item["mag_sgram"] = mag_sgram.mT  # [T, freq]
-                if self.allow_cache:
-                    self.mag_sgram_caches[hash_id] = item["mag_sgram"]
+        if not self.no_feat:
+            if self.model_input == "mag_sgram":
+                # fetch mag_sgram. return cached item if exists
+                if self.allow_cache and len(self.mag_sgram_caches[hash_id]) != 0:
+                    item["mag_sgram"] = self.mag_sgram_caches[hash_id]
+                else:
+                    # torchaudio requires waveform to be [..., T]
+                    mag_sgram = self.mag_sgram_transform(
+                        waveform.squeeze(-1)
+                    )  # mag_sgram: [freq, T]
+                    item["mag_sgram"] = mag_sgram.mT  # [T, freq]
+                    if self.allow_cache:
+                        self.mag_sgram_caches[hash_id] = item["mag_sgram"]
 
         return item
 
