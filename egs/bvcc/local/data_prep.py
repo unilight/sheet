@@ -48,6 +48,12 @@ def main():
         default=True,
         help=("use pre-calculated transcription. if false, perform calculation"),
     )
+    parser.add_argument(
+        "--domain-idx",
+        type=int,
+        default=None,
+        help=("domain ID.")
+    )
     args = parser.parse_args()
 
     # set logger
@@ -76,7 +82,7 @@ def main():
         }
     else:
         raise NotImplementedError
-
+    
     # read csv
     logging.info("Reading original csv file.")
     filelist, _ = read_csv(args.original_path)
@@ -107,6 +113,10 @@ def main():
             continue
         item.update(texts[f"{system_id}-{sample_id}"])
 
+        # append domain ID if given
+        if args.domain_idx is not None:
+            item["domain_idx"] = args.domain_idx
+
         if args.generate_listener_id:
             if not listener_id in listener_idxs:
                 listener_idxs[listener_id] = count
@@ -128,6 +138,8 @@ def main():
     ]
     if args.generate_listener_id:
         fieldnames.append("listener_idx")
+    if args.domain_idx is not None:
+        fieldnames.append("domain_idx")
     with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
