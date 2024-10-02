@@ -63,6 +63,12 @@ def main():
         type=str,
         help=("directory of the resampled waveform files."),
     )
+    parser.add_argument(
+        "--domain-idx",
+        type=int,
+        default=None,
+        help=("domain ID.")
+    )
     args = parser.parse_args()
 
     # set logger
@@ -117,7 +123,7 @@ def main():
             wav_path = resampled_wav_path
 
         item = {
-            "wav_path": wav_path,
+            "wav_path": os.path.realpath(wav_path),
             "score": score,
             "system_id": system_id,
             "sample_id": sample_id,
@@ -128,6 +134,11 @@ def main():
                 listener_idxs[listener_id] = count
                 count += 1
             item["listener_idx"] = listener_idxs[listener_id]
+        
+        # append domain ID if given
+        if args.domain_idx is not None:
+            item["domain_idx"] = args.domain_idx
+
         metadata.append(item)
 
     # write csv
@@ -135,6 +146,8 @@ def main():
     fieldnames = ["wav_path", "score", "system_id", "sample_id", "listener_id"]
     if args.generate_listener_id:
         fieldnames.append("listener_idx")
+    if args.domain_idx is not None:
+        fieldnames.append("domain_idx")
     with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()

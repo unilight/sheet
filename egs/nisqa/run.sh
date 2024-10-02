@@ -17,7 +17,7 @@ seed=1337
 conf=conf/ssl-mos-wav2vec2.yaml
 
 # dataset configuration
-db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus
+db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus  # change this to your dataset folder
 # db_root=downloads/NISQA_Corpus
 target_sampling_rate=16000
 domain_idx=1

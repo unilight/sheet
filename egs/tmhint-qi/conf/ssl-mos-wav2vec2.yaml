@@ -77,5 +77,5 @@ log_interval_steps: 100                 # Interval steps to record the training 
 keep_nbest_models: 5                    # number of models to keep
 patience: 20                            # patience for early stopping
 best_model_criterion:                   # criterion to save the best models
-    key: sys_SRCC
+    key: utt_SRCC
     order: highest                      # choices: lowest, highest

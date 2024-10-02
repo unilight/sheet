@@ -10,6 +10,7 @@ import argparse
 import csv
 import logging
 import os
+import soundfile as sf
 import sys
 
 from sheet.utils import read_csv
@@ -40,10 +41,38 @@ def main():
         help=("answer csv file path."),
     )
     parser.add_argument(
+        "--track",
+        required=True,
+        type=str,
+        help=("track. this is only used for track 1a/1b"),
+    )
+    parser.add_argument(
         "--out",
         required=True,
         type=str,
         help=("output csv file path."),
+    )
+    parser.add_argument(
+        "--resample",
+        action="store_true",
+        help=("whether to perform resampling or not."),
+    )
+    parser.add_argument(
+        "--target-sampling-rate",
+        type=int,
+        help=("target sampling rate."),
+    )
+    parser.add_argument(
+        "--resample-backend",
+        type=str,
+        default="librosa",
+        choices=["librosa"],
+        help=("resample backend."),
+    )
+    parser.add_argument(
+        "--target-wavdir",
+        type=str,
+        help=("directory of the resampled waveform files."),
     )
     args = parser.parse_args()
 
@@ -53,6 +82,12 @@ def main():
         stream=sys.stdout,
         format="%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s",
     )
+
+    # make resampled dir and dynamic import
+    if args.resample:
+        os.makedirs(args.target_wavdir, exist_ok=True)
+        if args.resample_backend == "librosa":
+            import librosa
 
     # read answer csv
     logging.info("Reading answer csv file.")
@@ -74,6 +109,10 @@ def main():
         # decide system id based on track
         if "Track1" in sample_id:
             system_id = "-".join(sample_id.split("_")[0].split("-")[1:])  # "A-AD"
+            if args.track == "track1a" and system_id.split("-")[-1] == "AD":
+                continue
+            if args.track == "track1b" and system_id.split("-")[-1] == "NEB":
+                continue
         elif "Track2" in sample_id:
             system_id = sample_id.split("-")[1]  # "B01"
         elif "Track3" in sample_id:
@@ -82,8 +121,31 @@ def main():
             )  # "Noisy_snr5_white_TMHINT" or "clean_TMHINT"
             if system_id == "TMHINT":
                 continue  # only accept "clean_TMHINT" but not "TMHINT"
+
+        # get wav path
+        wav_path = os.path.join(args.wavdir, sample_id + ".wav")
+
+        # if resample and resample is necessary
+        if (
+            args.resample
+            and librosa.get_samplerate(wav_path) != args.target_sampling_rate
+        ):
+            resampled_wav_path = os.path.join(args.target_wavdir, sample_id + ".wav")
+            # resample and write if not exist yet
+            if not os.path.isfile(resampled_wav_path):
+                if args.resample_backend == "librosa":
+                    resampled_wav, _ = librosa.load(
+                        wav_path, sr=args.target_sampling_rate
+                    )
+                sf.write(
+                    resampled_wav_path,
+                    resampled_wav,
+                    samplerate=args.target_sampling_rate,
+                )
+            wav_path = resampled_wav_path
+
         item = {
-            "wav_path": os.path.join(args.wavdir, sample_id + ".wav"),
+            "wav_path": wav_path,
             "score": score,
             "system_id": system_id,
             "sample_id": sample_id,

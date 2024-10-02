@@ -17,7 +17,7 @@ seed=1337
 conf=conf/ssl-mos-wav2vec2.yaml
 
 # dataset configuration
-# db_root=/data/group1/z44476r/Corpora/somos
+# db_root=/data/group1/z44476r/Corpora/somos  # change this to your dataset folder
 db_root=downloads
 target_sampling_rate=16000
 
@@ -52,13 +52,13 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 
     # parse original csv file to an unified format
     local/data_prep.py --generate-listener-id \
-        --original-path "${db_root}/training_files/split1/clean/TRAINSET" --wavdir "${db_root}/audios" --out "data/train.csv" \
+        --original-path "${db_root}/training_files/split1/clean/TRAINSET" --wavdir "${db_root}/audios" --out "data/somos_train.csv" \
         --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${db_root}/audios_${target_sampling_rate}" 
     local/data_prep.py \
-        --original-path "${db_root}/training_files/split1/clean/VALIDSET" --wavdir "${db_root}/audios" --out "data/dev.csv" \
+        --original-path "${db_root}/training_files/split1/clean/VALIDSET" --wavdir "${db_root}/audios" --out "data/somos_dev.csv" \
         --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${db_root}/audios_${target_sampling_rate}" 
     local/data_prep.py \
-        --original-path "${db_root}/training_files/split1/clean/TESTSET" --wavdir "${db_root}/audios" --out "data/test.csv" \
+        --original-path "${db_root}/training_files/split1/clean/TESTSET" --wavdir "${db_root}/audios" --out "data/somos_test.csv" \
         --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${db_root}/audios_${target_sampling_rate}" 
 fi
 

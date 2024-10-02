@@ -18,7 +18,7 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-db_root=/data/group1/z44476r/Corpora/BVCC/main/DATA
+db_root=/data/group1/z44476r/Corpora/BVCC/main/DATA  # change this to your dataset folder
 
 # training related setting
 tag=""     # tag for directory to save model

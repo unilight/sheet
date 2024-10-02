@@ -17,7 +17,7 @@ seed=1337
 conf=conf/ssl-mos-wav2vec2.yaml
 
 # dataset configuration
-db_root=/data/group1/z44476r/Corpora/tmhint-qi
+db_root=/data/group1/z44476r/Corpora/tmhint-qi  # change this to your dataset folder
 target_sampling_rate=16000
 
 # training related setting

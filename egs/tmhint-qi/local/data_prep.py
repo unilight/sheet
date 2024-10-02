@@ -60,6 +60,12 @@ def main():
         type=int,
         help=("Random seed. This is used to get consistent random sampling results."),
     )
+    parser.add_argument(
+        "--domain-idx",
+        type=int,
+        default=None,
+        help=("domain ID.")
+    )
     args = parser.parse_args()
 
     # set logger
@@ -111,12 +117,17 @@ def main():
             "system_id": system_id,
             "sample_id": sample_id,
         }
+        # append domain ID if given
+        if args.domain_idx is not None:
+            item["domain_idx"] = args.domain_idx
         metadata.append(item)
     metadata.sort(key=lambda x: x["wav_path"])
 
     # write csv
     logging.info("Writing output csv file.")
     fieldnames = ["wav_path", "score", "system_id", "sample_id"]
+    if args.domain_idx is not None:
+        fieldnames.append("domain_idx")
     with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()

@@ -28,12 +28,14 @@ model_params:
 ###########################################################
 #                      LOSS SETTING                       #
 ###########################################################
-mean_score_criterion_type: "ScalarLoss"
-mean_score_criterion_params:
-    tau: 0.5
-    masked_loss: False
-mean_score_criterion_weight: 1.0
-listener_score_criterion_type: null
+mean_score_criterions:
+    - criterion_type: "ScalarLoss"
+      criterion_weight: 1.0
+      criterion_params:
+        order: 1
+        tau: 0.5
+        masked_loss: False
+listener_score_criterions: null
 
 ###########################################################
 #                   INFERENCE SETTING                     #

@@ -17,7 +17,7 @@ seed=1337
 conf=conf/ssl-mos-wav2vec2.yaml
 
 # dataset configuration
-db_root=/data/group1/z44476r/Corpora/tencent/TencentCorups
+db_root=/data/group1/z44476r/Corpora/tencent/TencentCorups  # change this to your dataset folder
 target_sampling_rate=16000
 
 # training related setting
@@ -58,7 +58,7 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     local/data_prep.py \
         --original-path "${db_root}/withoutReverberationTrainDevMOS.csv" "${db_root}/withReverberationTrainDevMOS.csv" \
         --wavdir "${db_root}" --out "data/tencent_dev.csv" \
-        --setname "train" --seed "${seed}"
+        --setname "dev" --seed "${seed}"
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
