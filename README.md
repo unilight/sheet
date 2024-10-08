@@ -1,12 +1,140 @@
-# 📃 SHEET: Speech Human Evaluation Estimation Toolkit
+<p align="center">
+  <img src="assets/logo-sheet-only.png" alt="Prometheus-Logo" style="width: 30%; display: block; margin: auto;">
+</p>
 
-## Introduction and motivation
+<h1 align="center">🗣️ SHEET / MOS-Bench 🎧 </h1>
+<h3 align="center">Manipulate MOS-Bench with SHEET</h3>
 
-Recently, predicting human ratings of speech using data-driven models (specifically, deep neural networks) has been a popular research topic. This repository aims to provide **training recipes** to reproduce some popular models.
+<p>
+<b>MOS-Bench</b> is a benchmark designed to benchmark the generalization abilities of subjective speech quality assessment (SSQA) models. <b>SHEET</b> stands for the <b>S</b>peech <b>H</b>uman <b>E</b>valuation <b>E</b>stimation <b>T</b>oolkit. SHEET was designed to conduct research experiments with MOS-Bench.
+</p>
+
+<p align="center">
+    <a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 30%; display: block; margin: auto;"></a>
+</p>
+
+## Table of Contents
+- [Key Features](#key-features)
+- [MOS-Bench Overview](#mos-bench-overview)
+- [Supported models and features](#supported-training-datasets)
+- [Usage](#usage)
+  - [I am new to MOS prediction research. I want to train models!](#i-am-new-to-mos-prediction-research-i-want-to-train-models)
+  - [I already have my MOS predictor. I just want to do benchmarking!](#i-already-have-my-mos-predictor-i-just-want-to-do-benchmarking)
+  - [I just want to use your trained MOS predictor!](#i-just-want-to-use-your-trained-mos-predictor)
+- [Installation](#installation)
+- [Information](#information)
+
+
+## Key Features
+
+- MOS-Bench is the first <b>large-scale collection of training and testing datasets</b> for SSQA, covering a wide range of domains, including synthetic speech from text-to-speech (TTS), voice conversion (VC), singing voice synthetis (SVS) systems, and distorted speech with artificial and real noise, clipping, transmission, reverb, etc. Researchers can use the testing sets to benchmark their SSQA model.
+- This repository aims to provide **training recipes**. While there are many off-the-shelf speech quality evaluators like [DNSMOS](https://github.com/microsoft/DNS-Challenge/tree/master/DNSMOS), [SpeechMOS](https://github.com/tarepan/SpeechMOS) and [speechmetrics](https://github.com/aliutkus/speechmetrics), most of them do not provide training recipes, thus are not research-oriented.
+
+## MOS-Bench Overview
+
+For more details, please see our paper or `egs/README.md`.
+
+<img src="assets/mos-bench-table.png" alt="Prometheus-Logo" style="display: block; margin: auto;">
+
+## Supported models and features
+  <details><summary>Models</summary><div>  
+    <ul>
+    <li>
+      LDNet
+      <ul>
+        <li>Original repo link: <a href="https://github.com/unilight/LDNet">https://github.com/unilight/LDNet</a></li>
+        <li>Paper link: [<a href="https://arxiv.org/abs/2110.09103">arXiv</a>]</li>
+        <li>Example config: <code>egs/bvcc/conf/ldnet-ml.yaml</code></li>
+      </ul>
+    </li>
+    <li>
+      SSL-MOS
+      <ul>
+        <li>Original repo link: <a href="https://github.com/nii-yamagishilab/mos-finetune-ssl/tree/main">https://github.com/nii-yamagishilab/mos-finetune-ssl/tree/main</a></li>
+        <li>Paper link: [<a href="https://arxiv.org/abs/2110.02635">arXiv</a>]</li>
+        <li>Example config: <code>egs/bvcc/conf/ssl-mos-wav2vec2.yaml</code></li>
+        <li>Notes: We made some modifications to the original implementation. Please see the paper for more details.</li>
+      </ul>
+    </li>
+    <li>
+      UTMOS (Strong learner)
+      <ul>
+        <li>Original repo link: <a href="https://github.com/sarulab-speech/UTMOS22/tree/master/strong">https://github.com/sarulab-speech/UTMOS22/tree/master/strong</a></li>
+        <li>Paper link: [<a href="https://arxiv.org/abs/2204.02152">arXiv</a>]</li>
+        <li>Example config: <code>egs/bvcc/conf/utmos-strong.yaml</code></li>
+        <li>Notes: After discussion with the first author of UTMOS, Takaaki, we feel that UTMOS = SSL-MOS + listener modeling + contrastive loss + several model arch and training differences. Takaaki also felt that using phoneme and reference is not really helpful for UTMOS strong alone. Therefore we did not implement every component of UTMOS strong. For instance, we did not use domain ID and data augmentation.</li>
+      </ul>
+    </li>
+    <li>
+      Modified AlignNet
+      <ul>
+        <li>Original repo link: <a href="https://github.com/NTIA/alignnet">https://github.com/NTIA/alignnet</a></li>
+        <li>Paper link: [<a href="https://arxiv.org/abs/22406.10205">arXiv</a>]</li>
+        <li>Example config: <code>egs/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/conf/alignnet-wav2vec2.yaml</code></li>
+      </ul>
+    </li>
+    </ul>
+  </div></details>
+
+  <details><summary>Features</summary><div>
+    <ul>
+    <li>Modeling<ul>
+    <li>Listener modeling</li>
+    <li>Self-supervised learning (SSL) based encoder, supported by S3PRL<ul>
+    <li>Find the complete list of supported SSL models <a href="https://s3prl.github.io/s3prl/tutorial/upstream_collection.html">here</a>.</li>
+    </ul>
+    </li>
+    </ul>
+    </li>
+    <li>Training<ul>
+    <li>Automatic best-n model saving and early stopiing based on given validation criterion</li>
+    <li>Visualization, including predicted score distribution, scatter plot of utterance and system level scores</li>
+    <li>Model averaging</li>
+    <li>Model ensembling by stacking</li>
+    </ul>
+    </li>
+    </ul>
+  </div></details>
+
+## Usage
+
+### I am new to MOS prediction research. I want to train models!
+
+You are in the right place! This is the main purpose of the dataset.
+
+We provide complete experiment recipes (= set of scripts to download and process the dataset, train and evaluate models), as in many speech processing based repositories ([ESPNet](https://github.com/espnet/espnet), [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN), etc.). This style originated from kaldi.
+
+Please follow the [installation instructions](#instsallation) first, then see [egs/README.md](egs/README.md) for how to start.
+
+### I already have my MOS predictor. I just want to do benchmarking!
+
+
+
+### I just want to use your trained MOS predictor!
+
+<p>
+We utilize Torch Hub to provide a convenient way to load pre-trained SSQA models and predict scores of wav files or torch tensors.
+</p>
+
+```
+# load pre-trained model
+>>> predictor = torch.hub.load("unilight/sheet:v0.1.0", "default", trust_repo=True, force_reload=True)
+# you can either provide a path to your wav file
+>>> predictor.predict(wav_path=<wav path>)
+3.6066928
+# or provide a torch tensor with shape [num_samples]
+>>> predictor.predict(wav=<wav path>)
+3.6066928
+```
+
+Or you can try out our HuggingFace Spaces Demo!
+<a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 30%; display: block;"></a>
 
 ## Instsallation 
 
 ### Editable installation with virtualenv 
+
+You don't need to prepare an environment (using conda, etc.) first. The following commands will automatically construct a virtual environment in `tools/`.
 
 ```
 git clone https://github.com/unilight/sheet.git
@@ -14,114 +142,22 @@ cd sheet/tools
 make
 ```
 
-## Usage
+## Information
 
-Same as many speech processing based repositories ([ESPNet](https://github.com/espnet/espnet), [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN), etc.), we formulate our recipes in kaldi-style. They can be found in the `egs` folder.
+### Citation
 
-There are several usages of this toolkit.
+If you use the training scripts, benchmarking scripts or pre-trained models from this project, please consider citing the following paper.
 
-### Training a speech quality predictor with a supported dataset on your own
+(To be updated)
 
-You can train your own speech quality predictor using the datasets we support. Usually these datasets come with their own test sets, and you can test on these sets after training finishes. The starting point of each recipe is the `run.sh` file. Please check the detailed usage in each recipe.
-
-### Zero-shot prediction on multiple benchmarks with your trained model
-
-Inside each recipe, after the model training is done, you can run zero-shot prediction on other datasets and benchmarks. This can be done by running `run_XXX_test.sh` in each recipe. They are symbolic links to the scripts in the `egs/BENCHMARKS` folder.
-
-## Supported Training datasets
-
-Currently we support (and have tested) training recipes on the following datasets:
-
-- BVCC
-    - Dataset download link: https://zenodo.org/records/6572573
-    - Paper link: [[Original paper](https://arxiv.org/abs/2105.02373)] [[VoiceMOS Challenge 2022](https://arxiv.org/abs/2203.11389)]
-    - Recipe: `egs/bvcc`
-- SOMOS
-    - Dataset download link: https://zenodo.org/records/7378801
-    - Paper link: [[arXiv version](https://arxiv.org/abs/2204.03040)]
-    - Recipe: `egs/somos`
-- NISQA
-    - Dataset download link: https://github.com/gabrielmittag/NISQA/wiki/NISQA-Corpus
-    - Paper link: [[arXiv version](https://arxiv.org/abs/2104.09494)]
-    - Recipe: `egs/nisqa`
-- TMHINT-QI
-    - Dataset download link: https://drive.google.com/file/d/1TMDiz6dnS76hxyeAcCQxeSqqEOH4UDN0/view?usp=sharing
-    - Paper link: [[INTERSPEECH 2022 version](https://www.isca-speech.org/archive/pdfs/interspeech_2022/chen22i_interspeech.pdf)]
-    - Recipe: `egs/tmhint-qi`
-- PSTN
-    - Dataset download link: https://challenge.blob.core.windows.net/pstn/train.zip
-    - Paper link: [[arXiv version](https://arxiv.org/abs/2007.14598)]
-    - Recipe: `egs/pstn`
-- Tencent
-    - Dataset download link: https://www.dropbox.com/s/ocmn78uh2lu5iwg/TencentCorups.zip?dl=0
-    - Paper link: [[arXiv version](https://arxiv.org/abs/2203.16032)]
-    - Recipe: `egs/tencent`
-- SingMOS
-    - Dataset download link: https://drive.google.com/file/d/1DtzZhk3M_jsxUxirPcFRoBhq-dsinOWN/view?usp=drive_link
-    - Paper link: [[arXiv version](https://arxiv.org/abs/2406.10911)]
-    - Recipe: `egs/singmos`
-
-## Supported Benchmarks
-
-In addition to the test sets provided in the datasets above, you can do zero-shot evaluation on the following benchmarks.
-For usage, see [egs/BENCHMARK/README.md](egs/BENCHMARK)
-
-- VoiceMOS Challenge 2023 (BC2023, SVCC2023, TMHINTQI-(S))
-    - Paper link: [[arXiv version](https://arxiv.org/abs/2310.02640)]
-    - Recipe: `egs/BENCHMARK/run_vmc23_test.sh`
-
-Of course you can also do zero-shot benchmarking on the test sets of the training datasets:
-
-- BVCC: `egs/BENCHMARK/run_bvcc_test.sh`
-- SOMOS: `egs/BENCHMARK/run_somos_test.sh`
-- NISQA: `egs/BENCHMARK/run_nisqa_test.sh`
-    
-In the future, we plan to support the following additional benchmarks:
-
-- VoiceMOS Challenge 2022 OOD track
-- VoiceMOS Challenge 2024
-
-## Supported Models
-
-Currently we support the following models:
-
-- LDNet
-    - Original repo link: https://github.com/unilight/LDNet
-    - Paper link: [[arXiv](https://arxiv.org/abs/2110.09103)]
-    - Example config: `egs/bvcc/conf/ldnet-ml.yaml`
-- SSL-MOS
-    - Original repo link: https://github.com/nii-yamagishilab/mos-finetune-ssl/tree/main
-    - Paper link: [[arXiv](https://arxiv.org/abs/2110.02635)]
-    - Example config: `egs/bvcc/conf/ssl-mos-wav2vec2.yaml`
-- UTMOS (Strong learner)
-    - Original repo link: https://github.com/sarulab-speech/UTMOS22/tree/master/strong
-    - Paper link: [[arXiv](https://arxiv.org/abs/2204.02152)]
-    - Example config: `egs/bvcc/conf/utmos-strong.yaml`
-    - Notes:
-        - After discussion with the first author of UTMOS, Takaaki, we feel that UTMOS = SSL-MOS + listener modeling + contrastive loss + several model arch and training differences. Takaaki also felt that using phoneme and reference is not really helpful for UTMOS strong alone. Therefore we did not implement every component of UTMOS strong. For instance, we did not use domain ID and data augmentation.
-
-
-## Supported Features
-
-- Modeling
-    - Listener modeling
-    - Self-supervised learning (SSL) based encoder, supported by S3PRL
-      - Find the complete list of supported SSL models [here](https://s3prl.github.io/s3prl/tutorial/upstream_collection.html).
-- Training
-    - Automatic best-n model saving and early stopiing based on given validation criterion
-    - Visualization, including predicted score distribution, scatter plot of utterance and system level scores
-    - Model averaging
-    - Model ensembling by stacking
-
-
-## Acknowledgements
+### Acknowledgements
 
 This repo is greatly inspired by the following repos. Or I should say, many code snippets are directly taken from part of the following repos.
 
 - [ESPNet](https://github.com/espnet/espnet)
 - [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN/)
 
-## Author
+### Author
 
 Wen-Chin Huang  
 Toda Labotorary, Nagoya University  

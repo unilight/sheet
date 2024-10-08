@@ -19,10 +19,10 @@ class SSLMOS(torch.nn.Module):
         # dummy, for signature need
         model_input: str,
         # model related
-        ssl_module: str,
-        s3prl_name: str,
-        ssl_model_output_dim: int,
-        ssl_model_layer_idx: int,
+        ssl_module: str = "s3prl",
+        s3prl_name: str = "wav2vec2",
+        ssl_model_output_dim: int = 768,
+        ssl_model_layer_idx: int = -1,
         # mean net related
         mean_net_dnn_dim: int = 64,
         mean_net_output_type: str = "scalar",
