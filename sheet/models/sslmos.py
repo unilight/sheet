@@ -16,6 +16,8 @@ from sheet.modules.ldnet.modules import Projection
 class SSLMOS(torch.nn.Module):
     def __init__(
         self,
+        # dummy, for signature need
+        model_input: str,
         # model related
         ssl_module: str,
         s3prl_name: str,
@@ -37,6 +39,8 @@ class SSLMOS(torch.nn.Module):
         decoder_dnn_dim: int = 64,
         output_type: str = "scalar",
         range_clipping: bool = True,
+        # dummy, for signature need
+        num_domains: int = None,
     ):
         super().__init__()  # this is needed! or else there will be an error.
         self.use_mean_listener = use_mean_listener

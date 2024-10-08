@@ -13,6 +13,8 @@ from sheet.modules.ldnet.modules import Projection
 class AlignNet(torch.nn.Module):
     def __init__(
         self,
+        # dummy, for signature need
+        model_input: str,
         # model related
         ssl_module: str,
         s3prl_name: str,
