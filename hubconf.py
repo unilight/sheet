@@ -2,6 +2,7 @@
 
 dependencies = ["torch", "torchaudio"]
 
+import os
 import torch
 import torch.nn.functional as F
 import torchaudio
@@ -96,8 +97,9 @@ def default(progress: bool = True):
     """
 
     # get config
-    config = _urls_to_filepaths(URLS["default"]["conf"])
-    with open(config) as f:
+    config_dst = os.path.join(torch.hub.get_dir(), "configs", os.path.basename(URLS["default"]["conf"]))
+    torch.hub.download_url_to_file(URLS["default"]["conf"], dst=config_dst)
+    with open(config_dst) as f:
         config = yaml.load(f, Loader=yaml.Loader)
 
     # init model
