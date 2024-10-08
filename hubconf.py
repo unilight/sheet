@@ -65,7 +65,7 @@ class Predictor:
             if wav_path is not None:
                 raise ValueError("Either wav_path or wav can be set. Please choose one.")
         
-        if type(wav) is not torch.tensor:
+        if type(wav) is not torch.Tensor:
             raise ValueError("wav must be torch.tensor")
         if len(wav.shape) > 1:
             raise ValueError("wav must be of an 1d tensor of shape [num_samples]")
@@ -108,8 +108,6 @@ def default(progress: bool = True):
         from sheet.models.sslmos import SSLMOS
         model = SSLMOS(
             config["model_input"],
-            num_listeners=config.get("num_listeners", None),
-            num_domains=config.get("num_domains", None),
             **config["model_params"],
         )
 
