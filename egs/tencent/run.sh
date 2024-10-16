@@ -62,8 +62,16 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
-    echo "stage 1: Feature extraction"
-    echo "No feature extraction needed currently"
+    echo "stage 1: Pre-trained model download"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "tencent/sslmos/2337/checkpoint-21400steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "tencent/sslmos/2337/config.yml"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "tencent/sslmos/3337/checkpoint-57500steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "tencent/sslmos/3337/config.yml"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "tencent/sslmos/4337/checkpoint-21400steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "tencent/sslmos/4337/config.yml"
 fi
 
 if [ -z ${tag} ]; then

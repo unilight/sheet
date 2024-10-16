@@ -21,6 +21,8 @@ db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus  # change this to your d
 # db_root=downloads/NISQA_Corpus
 target_sampling_rate=16000
 domain_idx=1
+# num_train_samples=-1  ### default setting
+num_train_samples=4974  ### abaluation study setting
 
 # training related setting
 tag=""     # tag for directory to save model
@@ -42,6 +44,9 @@ meta_model_checkpoint=""
 . utils/parse_options.sh || exit 1;
 
 set -euo pipefail
+
+# train_set="nisqa_train"
+train_set="nisqa_train_${num_train_samples}"
 
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
@@ -77,7 +82,7 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     utils/combine_datasets.py --original-paths "data/train_sim.csv" "data/train_live.csv" --out "data/nisqa_train.csv"
     utils/combine_datasets.py --original-paths "data/dev_sim.csv" "data/dev_live.csv" --out "data/nisqa_dev.csv"
 
-    # Add domain idx for AlignNet MDF pre-training
+    Add domain idx for AlignNet MDF pre-training
 
     # parse original csv file to an unified format
     local/data_prep.py \
@@ -105,8 +110,16 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
-    echo "stage 1: Feature extraction"
-    echo "No feature extraction needed currently"
+    echo "stage 1: Pre-trained model download"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "nisqa/sslmos/2337/checkpoint-7500steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "nisqa/sslmos/2337/config.yml"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "nisqa/sslmos/3337/checkpoint-7500steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "nisqa/sslmos/3337/config.yml"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "nisqa/sslmos/4337/checkpoint-7500steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "nisqa/sslmos/4337/config.yml"
 fi
 
 if [ -z ${tag} ]; then
@@ -126,7 +139,7 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     fi
     echo "Training start. See the progress via ${expdir}/train.log."
     if [ "${use_domain_idx}" = "False" ]; then
-        train_csv_path="data/nisqa_train.csv"
+        train_csv_path="data/${train_set}.csv"
         dev_csv_path="data/nisqa_dev.csv"
     else
         train_csv_path="data/nisqa_train_with_domain_idx_${domain_idx}.csv"

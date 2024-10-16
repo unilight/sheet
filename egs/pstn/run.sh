@@ -26,7 +26,6 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
            
 # decoding related setting
-test_sets="pstn_dev"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -38,6 +37,10 @@ meta_model_checkpoint=""
 . utils/parse_options.sh || exit 1;
 
 set -euo pipefail
+
+train_set="pstn_train"
+dev_set="pstn_dev"
+test_sets="${dev_set}"
 
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
@@ -54,17 +57,25 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
 
     # parse original csv file to an unified format
     local/data_prep.py \
-        --original-path "${db_root}/pstn_train.csv" --wavdir "${db_root}" --setname "train" --out "data/pstn_train.csv" --seed "${seed}" \
-        --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${db_root}/wav_${target_sampling_rate}" 
+        --original-path "${db_root}/pstn_train.csv" --wavdir "${db_root}" --setname "train" --out "data/${train_set}.csv" --seed "${seed}" \
+        --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${db_root}/wav_${target_sampling_rate}"
     local/data_prep.py \
-        --original-path "${db_root}/pstn_train.csv" --wavdir "${db_root}" --setname "dev" --out "data/pstn_dev.csv" --seed "${seed}" \
-        --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${db_root}/wav_${target_sampling_rate}" 
+        --original-path "${db_root}/pstn_train.csv" --wavdir "${db_root}" --setname "dev" --out "data/${dev_set}.csv" --seed "${seed}" \
+        --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${db_root}/wav_${target_sampling_rate}"
         
 fi
 
 if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
-    echo "stage 1: Feature extraction"
-    echo "No feature extraction needed currently"
+    echo "stage 1: Pre-trained model download"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "pstn/sslmos/2337/checkpoint-19300steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "pstn/sslmos/2337/config.yml"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "pstn/sslmos/3337/checkpoint-11700steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "pstn/sslmos/3337/config.yml"
+
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "pstn/sslmos/4337/checkpoint-11700steps.pkl"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "pstn/sslmos/4337/config.yml"
 fi
 
 if [ -z ${tag} ]; then
@@ -86,8 +97,8 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train.log" \
         ${train} \
             --config "${conf}" \
-            --train-csv-path "data/pstn_train.csv" \
-            --dev-csv-path "data/pstn_dev.csv" \
+            --train-csv-path "data/${train_set}.csv" \
+            --dev-csv-path "data/${dev_set}.csv" \
             --outdir "${expdir}" \
             --resume "${resume}" \
             --verbose "${verbose}" \
