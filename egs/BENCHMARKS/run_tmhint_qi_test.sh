@@ -17,7 +17,7 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-tmhintqi_db_root=/data/group1/z44476r/Corpora/tmhint-qi
+tmhintqi_db_root=/data/group1/z44476r/Corpora/tmhint-qi # change this to your dataset folder
 datadir="../tmhint-qi/data"
 domain_idx=0
 target_sampling_rate=16000

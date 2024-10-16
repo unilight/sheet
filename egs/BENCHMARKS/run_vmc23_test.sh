@@ -17,7 +17,7 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-vmc23_db_root=/data/group1/z44476r/Corpora/vmc23
+vmc23_db_root=/data/group1/z44476r/Corpora/vmc23    # change this to your dataset folder
 # vmc23_db_root=../vmc23/downloads
 datadir="../vmc23/data"
 target_sampling_rate=16000
@@ -110,6 +110,8 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     echo "Successfully finished inference."
 fi
 
+########## EXPERIMENTAL FEATURE. DEPRECATED. #########################
+
 if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     echo "Stage 2: All domain idxs inference"
     # shellcheck disable=SC2012
@@ -150,6 +152,8 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     done
     echo "Successfully finished inference."
 fi
+
+######################################################################
 
 if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     echo "Stage 3: Non-parametric inference"

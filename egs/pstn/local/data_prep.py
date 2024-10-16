@@ -19,7 +19,7 @@ from sheet.utils import read_csv
 
 
 def main():
-    """Run training process."""
+    """Run data preprocessing."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--original-path",
@@ -79,6 +79,12 @@ def main():
         help=("The ratio of the dev set. Default: 0.1"),
     )
     parser.add_argument(
+        "--num-total-samples",
+        type=int,
+        default=-1,
+        help=("num of total samples to sub-sample. if <=0, then use whole dataset."),
+    )
+    parser.add_argument(
         "--seed",
         default=1337,
         type=int,
@@ -93,6 +99,7 @@ def main():
         format="%(asctime)s (%(module)s:%(lineno)d) %(levelname)s: %(message)s",
     )
 
+    # set seed
     random.seed(args.seed)
 
     # make resampled dir and dynamic import
@@ -104,6 +111,10 @@ def main():
     # read csv
     logging.info("Reading original csv file.")
     filelist, _ = read_csv(args.original_path, dict_reader=True)
+
+    # randomly subsample based on num-total-samples
+    if args.num_total_samples >= 0:
+        filelist = random.sample(filelist, args.num_total_samples)
 
     # prepare. each line looks like this:
     # filename,MOS,std,95%CI,votes

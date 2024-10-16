@@ -17,7 +17,7 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-somos_db_root=/data/group1/z44476r/Corpora/somos
+somos_db_root=/data/group1/z44476r/Corpora/somos    # change this to your dataset folder
 datadir="../somos/data"
 domain_idx=0
 target_sampling_rate=16000

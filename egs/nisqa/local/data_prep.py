@@ -8,18 +8,31 @@
 
 import argparse
 import csv
-import librosa
 import logging
 import os
-import soundfile as sf
 import sys
-from tqdm import tqdm
 
-from sheet.utils import read_csv
+# The following function(s) is(are) the same as in sheet.utils.utils
+# copied here for installation-free data preparation
+def read_csv(path, dict_reader=False, lazy=False):
+    with open(path, newline="") as csvfile:
+        if dict_reader:
+            reader = csv.DictReader(csvfile)
+            fieldnames = reader.fieldnames
+        else:
+            reader = csv.reader(csvfile)
+            fieldnames = None
+
+        if lazy:
+            contents = reader
+        else:
+            contents = [line for line in reader]
+
+    return contents, fieldnames
 
 
 def main():
-    """Run training process."""
+    """Run data preprocessing."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--original-path",
@@ -92,7 +105,7 @@ def main():
     # db,con,file,con_description,filename_deg,filename_ref,source,lang,votes,mos,noi,col,dis,loud,noi_std,col_std,dis_std,loud_std,mos_std,filepath_deg,filepath_ref,filter,timeclipping,wbgn,p50mnru,bgn,clipping,arb_filter,asl_in,asl_out,codec1,codec2,codec3,plcMode1,plcMode2,plcMode3,wbgn_snr,bgn_snr,tc_fer,tc_nburst,cl_th,bp_low,bp_high,p50_q,bMode1,bMode2,bMode3,FER1,FER2,FER3,asl_in_level,asl_out_level
     logging.info("Preparing metadata.")
     metadata = []
-    for line in tqdm(filelist):
+    for line in filelist:
         if len(line) == 0:
             continue
         system_id = line["con"]
@@ -106,6 +119,10 @@ def main():
             args.resample
             and librosa.get_samplerate(complete_wav_path) != args.target_sampling_rate
         ):
+            # check whether soundfile has been imported
+            if "soundfile" not in sys.modules:
+                import soundfile as sf
+
             resampled_wav_path = os.path.join(args.target_wavdir, wav_path)
             # resample and write if not exist yet
             if not os.path.isfile(resampled_wav_path):

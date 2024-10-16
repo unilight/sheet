@@ -9,14 +9,13 @@
 import argparse
 import csv
 import logging
-import os
 import sys
 
 from sheet.utils import read_csv
 
 
 def main():
-    """Run training process."""
+    """Run data preprocessing."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--original-paths",

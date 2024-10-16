@@ -17,7 +17,7 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-bvcc_db_root=/data/group1/z44476r/Corpora/BVCC/main/DATA
+bvcc_db_root=/data/group1/z44476r/Corpora/BVCC/main/DATA    # change this to your dataset folder
 datadir="../bvcc/data"
 domain_idx=0
 
@@ -44,7 +44,7 @@ set -euo pipefail
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
 
-    ../bvcc/local/data_download.sh ${somos_db_root}
+    ../bvcc/local/data_download.sh ${bvcc_db_root}
 fi
 
 
@@ -100,6 +100,8 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     echo "Successfully finished inference."
 fi
 
+########## EXPERIMENTAL FEATURE. DEPRECATED. #########################
+
 if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     echo "Stage 2: All domain idxs inference"
     # shellcheck disable=SC2012
@@ -134,6 +136,8 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     done
     echo "Successfully finished inference."
 fi
+
+######################################################################
 
 if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     echo "Stage 3: Non-parametric inference"

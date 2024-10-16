@@ -21,8 +21,6 @@ db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus  # change this to your d
 # db_root=downloads/NISQA_Corpus
 target_sampling_rate=16000
 domain_idx=1
-# num_train_samples=-1  ### default setting
-num_train_samples=4974  ### abaluation study setting
 
 # training related setting
 tag=""     # tag for directory to save model
@@ -45,8 +43,7 @@ meta_model_checkpoint=""
 
 set -euo pipefail
 
-# train_set="nisqa_train"
-train_set="nisqa_train_${num_train_samples}"
+train_set="nisqa_train"
 
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
@@ -82,7 +79,7 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     utils/combine_datasets.py --original-paths "data/train_sim.csv" "data/train_live.csv" --out "data/nisqa_train.csv"
     utils/combine_datasets.py --original-paths "data/dev_sim.csv" "data/dev_live.csv" --out "data/nisqa_dev.csv"
 
-    Add domain idx for AlignNet MDF pre-training
+    # Add domain idx for AlignNet MDF pre-training
 
     # parse original csv file to an unified format
     local/data_prep.py \

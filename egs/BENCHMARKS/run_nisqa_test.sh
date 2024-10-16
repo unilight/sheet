@@ -17,7 +17,7 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-nisqa_db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus
+nisqa_db_root=/data/group1/z44476r/Corpora/nisqa/NISQA_Corpus   # change this to your dataset folder
 datadir="../nisqa/data"
 domain_idx=1
 target_sampling_rate=16000
@@ -43,7 +43,7 @@ set -euo pipefail
 if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
 
-    local/data_download.sh ${db_root}
+    ../nisqa/local/data_download.sh ${db_root}
 fi
 
 mkdir -p "${datadir}"
@@ -51,7 +51,7 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
     for test_set in LIVETALK FOR P501; do
-        local/data_prep.py \
+        ../nisqa/local/data_prep.py \
             --original-path "${nisqa_db_root}/NISQA_TEST_${test_set}/NISQA_TEST_${test_set}_file.csv" \
             --wavdir "${nisqa_db_root}/NISQA_TEST_${test_set}/deg" \
             --domain-idx "${domain_idx}" \

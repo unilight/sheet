@@ -8,16 +8,54 @@
 
 import argparse
 import csv
+import fnmatch
 import logging
 import os
 import random
 import sys
 
-from sheet.utils import read_csv, find_files
+# The following function(s) is(are) the same as in sheet.utils.utils
+# copied here for installation-free data preparation
+def read_csv(path, dict_reader=False, lazy=False):
+    with open(path, newline="") as csvfile:
+        if dict_reader:
+            reader = csv.DictReader(csvfile)
+            fieldnames = reader.fieldnames
+        else:
+            reader = csv.reader(csvfile)
+            fieldnames = None
+
+        if lazy:
+            contents = reader
+        else:
+            contents = [line for line in reader]
+
+    return contents, fieldnames
+
+def find_files(root_dir, query="*.wav", include_root_dir=True):
+    """Find files recursively.
+
+    Args:
+        root_dir (str): Root root_dir to find.
+        query (str): Query to find.
+        include_root_dir (bool): If False, root_dir name is not included.
+
+    Returns:
+        list: List of found filenames.
+
+    """
+    files = []
+    for root, dirnames, filenames in os.walk(root_dir, followlinks=True):
+        for filename in fnmatch.filter(filenames, query):
+            files.append(os.path.join(root, filename))
+    if not include_root_dir:
+        files = [file_.replace(root_dir + "/", "") for file_ in files]
+
+    return files
 
 
 def main():
-    """Run training process."""
+    """Run data preprocessing."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--original-path",

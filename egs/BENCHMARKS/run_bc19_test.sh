@@ -17,8 +17,8 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-bc19_db_root=/data/group1/z44476r/Corpora/bc19/ood/DATA
-datadir="../bvcc/data"
+bc19_db_root=/data/group1/z44476r/Corpora/bc19/ood/DATA # change this to your dataset folder
+datadir="../bc19/data"
 domain_idx=0
 target_sampling_rate=16000
 

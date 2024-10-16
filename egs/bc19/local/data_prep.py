@@ -11,13 +11,28 @@ import csv
 import logging
 import os
 import sys
-import soundfile as sf
 
-from sheet.utils import read_csv
+# The following function(s) is(are) the same as in sheet.utils.utils
+# copied here for installation-free data preparation
+def read_csv(path, dict_reader=False, lazy=False):
+    with open(path, newline="") as csvfile:
+        if dict_reader:
+            reader = csv.DictReader(csvfile)
+            fieldnames = reader.fieldnames
+        else:
+            reader = csv.reader(csvfile)
+            fieldnames = None
+
+        if lazy:
+            contents = reader
+        else:
+            contents = [line for line in reader]
+
+    return contents, fieldnames
 
 
 def main():
-    """Run training process."""
+    """Run data preprocessing."""
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--original-path",
@@ -101,6 +116,10 @@ def main():
             args.resample
             and librosa.get_samplerate(wav_path) != args.target_sampling_rate
         ):
+            # check whether soundfile has been imported
+            if "soundfile" not in sys.modules:
+                import soundfile as sf
+
             resampled_wav_path = os.path.join(args.target_wavdir, sample_id + ".wav")
             # resample and write if not exist yet
             if not os.path.isfile(resampled_wav_path):
