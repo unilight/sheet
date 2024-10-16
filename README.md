@@ -104,7 +104,7 @@ You are in the right place! This is the main purpose of the dataset.
 
 We provide complete experiment recipes (= set of scripts to download and process the dataset, train and evaluate models), as in many speech processing based repositories ([ESPNet](https://github.com/espnet/espnet), [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN), etc.). This style originated from kaldi.
 
-Please follow the [installation instructions](#instsallation) first, then see [egs/README.md](egs/README.md) for how to start.
+Please follow the [installation instructions](#instsallation) first, then see [egs/README.md](egs/) for how to start.
 
 ### I already have my MOS predictor. I just want to do benchmarking!
 
@@ -112,19 +112,19 @@ Please follow the [installation instructions](#instsallation) first, then see [e
 
 ### I just want to use your trained MOS predictor!
 
-<p>
-We utilize Torch Hub to provide a convenient way to load pre-trained SSQA models and predict scores of wav files or torch tensors.
-</p>
+We utilize `torch.hub` to provide a convenient way to load pre-trained SSQA models and predict scores of wav files or torch tensors.
 
-```
+```python
 # load pre-trained model
 >>> predictor = torch.hub.load("unilight/sheet:v0.1.0", "default", trust_repo=True, force_reload=True)
+
 # you can either provide a path to your wav file
->>> predictor.predict(wav_path=<wav path>)
+>>> predictor.predict(wav_path="/path/to/wav/file.wav")
 3.6066928
+
 # or provide a torch tensor with shape [num_samples]
->>> predictor.predict(wav=<wav path>)
-3.6066928
+>>> predictor.predict(wav=torch.rand(16000))
+1.5806346
 ```
 
 Or you can try out our HuggingFace Spaces Demo!
@@ -136,7 +136,7 @@ Or you can try out our HuggingFace Spaces Demo!
 
 You don't need to prepare an environment (using conda, etc.) first. The following commands will automatically construct a virtual environment in `tools/`.
 
-```
+```bash
 git clone https://github.com/unilight/sheet.git
 cd sheet/tools
 make

@@ -135,3 +135,4 @@ data/
 *.wav
 *.txt
 egs/playground/
+egs/visualize_for_mos_bench_journal/
