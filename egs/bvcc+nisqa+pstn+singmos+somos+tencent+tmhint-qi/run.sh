@@ -82,25 +82,43 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
     # SSL-MOS + MDF
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-mdf-2337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/2337/checkpoint-51000steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-mdf-2337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/2337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-mdf-2337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/2337/checkpoint-51000steps.pkl" "exp/pt_ssl-mos-wav2vec2-mdf-2337/checkpoint-51000steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-mdf-2337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/2337/config.yml" "exp/pt_ssl-mos-wav2vec2-mdf-2337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-mdf-2337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-mdf-3337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/3337/checkpoint-51000steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-mdf-3337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/3337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-mdf-3337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/3337/checkpoint-51000steps.pkl" "exp/pt_ssl-mos-wav2vec2-mdf-3337/checkpoint-51000steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-mdf-3337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/3337/config.yml" "exp/pt_ssl-mos-wav2vec2-mdf-3337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-mdf-3337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-mdf-4337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/4337/checkpoint-51000steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-mdf-4337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/4337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-mdf-4337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/4337/checkpoint-51000steps.pkl" "exp/pt_ssl-mos-wav2vec2-mdf-4337/checkpoint-51000steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-mdf-4337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/sslmos+mdf/4337/config.yml" "exp/pt_ssl-mos-wav2vec2-mdf-4337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-mdf-4337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi"
 
     # Modified AlignNet
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-2337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/2337/checkpoint-86000steps.pkl"
-    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-2337" --filename "nisqa/sslmos/2337/config.yml"
-    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-2337/datastore/checkpoint-86000steps" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/2337/datastore/checkpoint-86000steps/datastore.h5"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-2337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/2337/config.yml"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-2337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/2337/datastore/checkpoint-86000steps/datastore.h5"
+    mv "exp/pt_alignnet-wav2vec2-2337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/2337/checkpoint-86000steps.pkl" "exp/pt_alignnet-wav2vec2-2337/checkpoint-86000steps.pkl"
+    mv "exp/pt_alignnet-wav2vec2-2337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/2337/config.yml" "exp/pt_alignnet-wav2vec2-2337/config.yml"
+    mv "exp/pt_alignnet-wav2vec2-2337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/2337/datastore" "exp/pt_alignnet-wav2vec2-2337"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-3337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/3337/checkpoint-93000steps.pkl"
-    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-3337" --filename "nisqa/sslmos/3337/config.yml"
-    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-3337/datastore/checkpoint-93000steps" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/3337/datastore/checkpoint-93000steps/datastore.h5"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-3337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/3337/config.yml"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-3337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/3337/datastore/checkpoint-93000steps/datastore.h5"
+    mv "exp/pt_alignnet-wav2vec2-3337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/3337/checkpoint-93000steps.pkl" "exp/pt_alignnet-wav2vec2-3337/checkpoint-93000steps.pkl"
+    mv "exp/pt_alignnet-wav2vec2-3337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/3337/config.yml" "exp/pt_alignnet-wav2vec2-3337/config.yml"
+    mv "exp/pt_alignnet-wav2vec2-3337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/3337/datastore" "exp/pt_alignnet-wav2vec2-3337"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-4337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/4337/checkpoint-91000steps.pkl"
-    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-4337" --filename "nisqa/sslmos/4337/config.yml"
-    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-4337/datastore/checkpoint-91000steps" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/4337/datastore/checkpoint-91000steps/datastore.h5"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-4337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/4337/config.yml"
+    utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_alignnet-wav2vec2-4337" --filename "bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/4337/datastore/checkpoint-91000steps/datastore.h5"
+    mv "exp/pt_alignnet-wav2vec2-4337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/4337/checkpoint-91000steps.pkl" "exp/pt_alignnet-wav2vec2-4337/checkpoint-91000steps.pkl"
+    mv "exp/pt_alignnet-wav2vec2-4337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/4337/config.yml" "exp/pt_alignnet-wav2vec2-4337/config.yml"
+    mv "exp/pt_alignnet-wav2vec2-4337/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/alignnet/4337/datastore" "exp/pt_alignnet-wav2vec2-4337"
 fi
 
 if [ -z ${tag} ]; then

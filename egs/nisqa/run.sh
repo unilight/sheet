@@ -111,12 +111,21 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "nisqa/sslmos/2337/checkpoint-7500steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "nisqa/sslmos/2337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-2337/nisqa/sslmos/2337/checkpoint-7500steps.pkl" "exp/pt_ssl-mos-wav2vec2-2337/checkpoint-7500steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-2337/nisqa/sslmos/2337/config.yml" "exp/pt_ssl-mos-wav2vec2-2337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-2337/nisqa"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "nisqa/sslmos/3337/checkpoint-7500steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "nisqa/sslmos/3337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-3337/nisqa/sslmos/3337/checkpoint-7500steps.pkl" "exp/pt_ssl-mos-wav2vec2-3337/checkpoint-7500steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-3337/nisqa/sslmos/3337/config.yml" "exp/pt_ssl-mos-wav2vec2-3337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-3337/nisqa"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "nisqa/sslmos/4337/checkpoint-7500steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "nisqa/sslmos/4337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-4337/nisqa/sslmos/4337/checkpoint-7500steps.pkl" "exp/pt_ssl-mos-wav2vec2-4337/checkpoint-7500steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-4337/nisqa/sslmos/4337/config.yml" "exp/pt_ssl-mos-wav2vec2-4337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-4337/nisqa"
 fi
 
 if [ -z ${tag} ]; then

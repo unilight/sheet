@@ -66,12 +66,21 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "tencent/sslmos/2337/checkpoint-21400steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "tencent/sslmos/2337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-2337/tencent/sslmos/2337/checkpoint-21400steps.pkl" "exp/pt_ssl-mos-wav2vec2-2337/checkpoint-21400steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-2337/tencent/sslmos/2337/config.yml" "exp/pt_ssl-mos-wav2vec2-2337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-2337/tencent"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "tencent/sslmos/3337/checkpoint-57500steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "tencent/sslmos/3337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-3337/tencent/sslmos/3337/checkpoint-57500steps.pkl" "exp/pt_ssl-mos-wav2vec2-3337/checkpoint-57500steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-3337/tencent/sslmos/3337/config.yml" "exp/pt_ssl-mos-wav2vec2-3337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-3337/tencent"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "tencent/sslmos/4337/checkpoint-21400steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "tencent/sslmos/4337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-4337/tencent/sslmos/4337/checkpoint-21400steps.pkl" "exp/pt_ssl-mos-wav2vec2-4337/checkpoint-21400steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-4337/tencent/sslmos/4337/config.yml" "exp/pt_ssl-mos-wav2vec2-4337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-4337/tencent"
 fi
 
 if [ -z ${tag} ]; then

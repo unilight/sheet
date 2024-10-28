@@ -63,12 +63,21 @@ if [ ${stage} -le 1 ] && [ ${stop_stage} -ge 1 ]; then
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "singmos/sslmos/2337/checkpoint-3600steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-2337" --filename "singmos/sslmos/2337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-2337/singmos/sslmos/2337/checkpoint-3600steps.pkl" "exp/pt_ssl-mos-wav2vec2-2337/checkpoint-3600steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-2337/singmos/sslmos/2337/config.yml" "exp/pt_ssl-mos-wav2vec2-2337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-2337/singmos"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "singmos/sslmos/3337/checkpoint-3900steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-3337" --filename "singmos/sslmos/3337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-3337/singmos/sslmos/3337/checkpoint-3900steps.pkl" "exp/pt_ssl-mos-wav2vec2-3337/checkpoint-3900steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-3337/singmos/sslmos/3337/config.yml" "exp/pt_ssl-mos-wav2vec2-3337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-3337/singmos"
 
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "singmos/sslmos/4337/checkpoint-1700steps.pkl"
     utils/hf_download.py --repo_id "unilight/sheet-models" --outdir "exp/pt_ssl-mos-wav2vec2-4337" --filename "singmos/sslmos/4337/config.yml"
+    mv "exp/pt_ssl-mos-wav2vec2-4337/singmos/sslmos/4337/checkpoint-1700steps.pkl" "exp/pt_ssl-mos-wav2vec2-4337/checkpoint-1700steps.pkl"
+    mv "exp/pt_ssl-mos-wav2vec2-4337/singmos/sslmos/4337/config.yml" "exp/pt_ssl-mos-wav2vec2-4337/config.yml"
+    rm -rf "exp/pt_ssl-mos-wav2vec2-4337/singmos"
 fi
 
 if [ -z ${tag} ]; then
