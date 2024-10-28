@@ -7,6 +7,7 @@
 """Inference ."""
 
 import argparse
+import csv
 import logging
 import os
 import pickle
@@ -26,6 +27,7 @@ from sheet.evaluation.plot import (
     plot_utt_level_hist,
     plot_utt_level_scatter,
 )
+from sheet.utils import read_csv
 from sheet.utils.model_io import model_average
 from sheet.utils.types import str2bool
 from tqdm import tqdm
@@ -247,7 +249,7 @@ def main():
             sys_name = batch["system_id"]
             eval_sys_results["pred_mean_scores"][sys_name].append(pred_mean_scores[i])
             eval_sys_results["true_mean_scores"][sys_name].append(true_mean_scores)
-    
+
     # not using stacking
     else:
         # load parameter, or take average
@@ -255,9 +257,14 @@ def main():
             args.checkpoint != "" and not args.model_averaging
         )
         if args.checkpoint != "":
-            model.load_state_dict(
-                torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"]
-            )
+            if os.path.islink(args.checkpoint):
+                model.load_state_dict(
+                    torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"]
+                )
+            else:
+                model.load_state_dict(
+                    torch.load(args.checkpoint, map_location="cpu")["model"]
+                )
             logging.info(f"Loaded model parameters from {args.checkpoint}.")
         else:
             model, checkpoint_paths = model_average(model, expdir)
@@ -295,7 +302,9 @@ def main():
                     )
                 if "domain_idx" in batch:
                     inputs["domain_idxs"] = (
-                        torch.tensor(batch["domain_idx"], dtype=torch.long).unsqueeze(0).to(device)
+                        torch.tensor(batch["domain_idx"], dtype=torch.long)
+                        .unsqueeze(0)
+                        .to(device)
                     )
 
                 # model forward
@@ -307,7 +316,9 @@ def main():
                     raise NotImplementedError
 
                 # store results
-                pred_mean_scores = outputs["scores"].cpu().detach().numpy()[0]
+                answer = outputs["scores"].cpu().detach().numpy()[0]
+                dataset.fill_answer(batch["sample_id"], answer)
+                pred_mean_scores = answer
                 true_mean_scores = batch["avg_score"]
                 eval_results["pred_mean_scores"].append(pred_mean_scores)
                 eval_results["true_mean_scores"].append(true_mean_scores)
@@ -322,8 +333,6 @@ def main():
                 total_inference_time / len(dataset)
             )
         )
-
-    # calculate metrics
     eval_results["true_mean_scores"] = np.array(eval_results["true_mean_scores"])
     eval_results["pred_mean_scores"] = np.array(eval_results["pred_mean_scores"])
     eval_sys_results["true_mean_scores"] = np.array(
@@ -399,6 +408,16 @@ def main():
         results["sys_MSE"],
         results["sys_KTAU"],
     )
+
+    # write results
+    results = dataset.return_results()
+    results_path = os.path.join(args.outdir, "results.csv")
+    fieldnames = list(results[0].keys())
+    with open(results_path, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for line in results:
+            writer.writerow(line)
 
 
 if __name__ == "__main__":

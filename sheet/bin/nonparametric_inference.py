@@ -246,7 +246,9 @@ def main():
                 raise NotImplementedError
 
             # store results
-            pred_mean_scores = outputs
+            answer = outputs
+            dataset.fill_answer(batch["sample_id"], answer)
+            pred_mean_scores = answer
             true_mean_scores = batch["avg_score"]
             eval_results["pred_mean_scores"].append(pred_mean_scores)
             eval_results["true_mean_scores"].append(true_mean_scores)
@@ -343,6 +345,15 @@ def main():
         results["sys_KTAU"],
     )
 
+    # write results
+    results = dataset.return_results()
+    results_path = os.path.join(args.outdir, "results.csv")
+    fieldnames = list(results[0].keys())
+    with open(results_path, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for line in results:
+            writer.writerow(line)
 
 if __name__ == "__main__":
     main()

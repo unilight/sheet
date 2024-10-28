@@ -22,7 +22,7 @@ if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     ../somos/local/data_download.sh ${db_root}/somos
     ../singmos/local/data_download.sh ${db_root}/singmos
     ../nisqa/local/data_download.sh ${db_root}/nisqa
-    ../tmhint_qi/local/data_download.sh ${db_root}/tmhint_qi
+    ../tmhint-qi/local/data_download.sh ${db_root}/tmhint_qi
     ../vmc23/local/data_download.sh ${db_root}/vmc23
 
     echo "Please follow instructions in bvcc, bc19 to finish the download process."
@@ -34,45 +34,59 @@ if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     mkdir -p "${datadir}"
 
     # bvcc
-    ../bvcc/local/data_prep.py \
-        --original-path "${db_root}/bvcc/sets/TESTSET" --wavdir "${db_root}/wav" --out "${datadir}/bvcc_test.csv"
+    echo "=== Data preparation for BVCC test ==="
+    ../bvcc/local/data_prep.py --avg-score-only \
+        --original-path "${db_root}/bvcc/main/DATA/sets/TESTSET" --wavdir "${db_root}/main/DATA/wav" --out "${datadir}/bvcc_test.csv"
+    echo
 
     # bc19
-    ../bc19/local/data_prep.py \
-        --original-path "${db_root}/bc19/sets/TESTSET" --wavdir "${db_root}/bc19/wav" --out "${datadir}/bc19_test.csv"
+    echo "=== Data preparation for VMC'22 OOD track (bc'19) ==="
+    ../bc19/local/data_prep.py --avg-score-only \
+        --original-path "${db_root}/bc19/ood/DATA/sets/TESTSET" --wavdir "${db_root}/bc19/ood/DATA/wav" --out "${datadir}/bc19_test.csv"
+    echo
 
     # somos
-    ../somos/local/data_prep.py \
+    echo "=== Data preparation for SOMOS test ==="
+    ../somos/local/data_prep.py --avg-score-only \
         --original-path "${db_root}/somos/training_files/split1/clean/TESTSET" --wavdir "${db_root}/somos/audios" --out "${datadir}/somos_test.csv"
+    echo
 
     # singmos
-    ../singmos/local/data_prep.py \
-        --original-path "${db_root}/singmos/sets/eval_mos_list.txt" --wavdir "${db_root}/wav" --out "${datadir}/singmos_test.csv"
+    echo "=== Data preparation for VMC'24 track 2 (SingMOS test) ==="
+    ../singmos/local/data_prep.py --avg-score-only \
+        --original-path "${db_root}/singmos/DATA/sets/eval_mos_list.txt" --wavdir "${db_root}/DATA/wav" --out "${datadir}/singmos_test.csv"
+    echo
 
     # nisqa
     for test_set in LIVETALK FOR P501; do
-        ../nisqa/local/data_prep.py \
+        echo "=== Data preparation for NISQA TEST ${test_set} ==="
+        ../nisqa/local/data_prep.py --avg-score-only \
             --original-path "${db_root}/nisqa/NISQA_TEST_${test_set}/NISQA_TEST_${test_set}_file.csv" \
             --wavdir "${db_root}/nisqa/NISQA_TEST_${test_set}/deg" \
             --out "${datadir}/nisqa_${test_set}.csv"
+        echo
     done
 
     # tmhint-qi
-    ../tmhint-qi/local/data_prep.py \
-        --original-path "${db_root}/tmhint_qi/raw_data.csv" --wavdir "${db_root}/test" --setname "test" --out "${datadir}/tmhintqi_test.csv"
+    echo "=== Data preparation for TMHINT-QI test ==="
+    ../tmhint-qi/local/data_prep.py --avg-score-only \
+        --original-path "${db_root}/tmhint_qi/raw_data.csv" --wavdir "${db_root}/tmhint_qi/test" --setname "test" --out "${datadir}/tmhintqi_test.csv"
+    echo
 
     # vmc23
     for track in track1a track1b track2 track3; do
+        echo "=== Data preparation for VMC'22 ${track} ==="
         if [ "${track}" = "track1a" ] || [ "${track}" = "track1b" ]; then
             _track=track1
         else
             _track="${track}"
         fi
-        ../vmc23/local/data_prep.py \
+        ../vmc23/local/data_prep.py --avg-score-only \
             --original-path "${db_root}/vmc23/${_track}" \
             --wavdir "${db_root}/vmc23/${_track}" \
             --answer_path "../vmc23/answers/${_track}_answer.txt" \
             --track "${track}" \
             --out "${datadir}/vmc23_${track}_test.csv"
+        echo
     done
 fi

@@ -18,7 +18,7 @@ MIN_REQUIRED_WAV_LENGTH = 1040
 
 
 class NonIntrusiveDataset(Dataset):
-    """PyTorch compatible mel-to-mel dataset for parallel VC."""
+    """PyTorch compatible dataset for non-intrusive SSQA."""
 
     def __init__(
         self,
@@ -258,3 +258,18 @@ class NonIntrusiveDataset(Dataset):
                 }
 
         self.metadata = list(new_metadata.values())
+
+    # the following two functions are for writing results during inference
+    def fill_answer(self, sample_id, score):
+        for idx, item in enumerate(self.metadata):
+            if item["sample_id"] == sample_id: break
+        self.metadata[idx]["answer"] = score
+
+    def return_results(self):
+        return [
+            {
+                k: item[k]
+                for k in ["wav_path", "system_id", "sample_id", "avg_score", "answer"]
+            }
+            for item in self.metadata
+        ]
