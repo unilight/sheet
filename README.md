@@ -28,11 +28,11 @@
 ## Key Features
 
 - MOS-Bench is the first <b>large-scale collection of training and testing datasets</b> for SSQA, covering a wide range of domains, including synthetic speech from text-to-speech (TTS), voice conversion (VC), singing voice synthetis (SVS) systems, and distorted speech with artificial and real noise, clipping, transmission, reverb, etc. Researchers can use the testing sets to benchmark their SSQA model.
-- This repository aims to provide **training recipes**. While there are many off-the-shelf speech quality evaluators like [DNSMOS](https://github.com/microsoft/DNS-Challenge/tree/master/DNSMOS), [SpeechMOS](https://github.com/tarepan/SpeechMOS) and [speechmetrics](https://github.com/aliutkus/speechmetrics), most of them do not provide training recipes, thus are not research-oriented.
+- This repository aims to provide **training recipes**. While there are many off-the-shelf speech quality evaluators like [DNSMOS](https://github.com/microsoft/DNS-Challenge/tree/master/DNSMOS), [SpeechMOS](https://github.com/tarepan/SpeechMOS) and [speechmetrics](https://github.com/aliutkus/speechmetrics), most of them do not provide training recipes, thus are not research-oriented. Newcomers may utilize this repo as a starting point to SSQA research.
 
 ## MOS-Bench Overview
 
-For more details, please see our paper or `egs/README.md`.
+MOS-Bench currently contains 7 training sets and 12 test sets. Below is a screenshot of a summary table from our paper. For more details, please see our paper or `egs/README.md`.
 
 <img src="assets/mos-bench-table.png" alt="Prometheus-Logo" style="display: block; margin: auto;">
 
@@ -100,15 +100,17 @@ For more details, please see our paper or `egs/README.md`.
 
 ### I am new to MOS prediction research. I want to train models!
 
-You are in the right place! This is the main purpose of the dataset.
+You are in the right place! This is the main purpose of SHEET.
 
-We provide complete experiment recipes (= set of scripts to download and process the dataset, train and evaluate models), as in many speech processing based repositories ([ESPNet](https://github.com/espnet/espnet), [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN), etc.). This style originated from kaldi.
+We provide complete experiment recipes, i.e., set of scripts to download and process the dataset, train and evaluate models. This structure originated from Kaldi, and is also used in many speech processing based repositories ([ESPNet](https://github.com/espnet/espnet), [ParallelWaveGAN](https://github.com/kan-bayashi/ParallelWaveGAN), etc.).
 
 Please follow the [installation instructions](#instsallation) first, then see [egs/README.md](egs/) for how to start.
 
 ### I already have my MOS predictor. I just want to do benchmarking!
 
+We provide scripts to collect the test sets conveniently. These scripts can be run on Linux-like platforms with basic python requirements, such that you do not need to instal all the heavy packages, like PyTorch.
 
+Please see [the related section in egs/README.md](egs#get-the-test-sets-in-mos-bench) for detailed instructions.
 
 ### I just want to use your trained MOS predictor!
 
@@ -134,7 +136,7 @@ Or you can try out our HuggingFace Spaces Demo!
 
 ### Editable installation with virtualenv 
 
-You don't need to prepare an environment (using conda, etc.) first. The following commands will automatically construct a virtual environment in `tools/`.
+You don't need to prepare an environment (using conda, etc.) first. The following commands will automatically construct a virtual environment in `tools/`. When you run the recipes, the scripts will automatically activate the virtual environment.
 
 ```bash
 git clone https://github.com/unilight/sheet.git

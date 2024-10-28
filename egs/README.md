@@ -4,7 +4,7 @@
 
 - [Usage](#usage)
   - [Conduct complete experiments (training & benchmarking)](#conduct-complete-experiments-training--benchmarking)
-  - [Reproduce]
+  - [Download pre-trained SSQA models to reproduce the paper results](#download-pre-trained-ssqa-models-to-reproduce-the-paper-results)
   - [Get the test sets in MOS-Bench](#get-the-test-sets-in-mos-bench)
 - [Training datasets in MOS-Bench](#training-datasets-in-mos-bench)
 - [Testing datasets in MOS-Bench](#testing-sets-in-mos-bench)
@@ -61,7 +61,7 @@ Optionally, the following columns may exist:
 - `cluster`: This only exists for BVCC. Not really important.
 - `reference`: This only exists for BVCC. Not really important.
 
-_Note: stage 1 is deprecated and not used._
+_Note: stage 1 is reserved for pre-trained model download usage Please see [Download pre-trained SSQA models] for details.(#download-pre-trained-ssqa-models-to-reproduce-the-paper-results)._
 
 ##### Training
 
@@ -158,18 +158,28 @@ Then, run inference based on the mode:
 
 ### Download pre-trained SSQA models to reproduce the paper results
 
-All the models are hosted on HuggingFace Models. <a href="https://huggingface.co/unilight/sheet-models"><img src="https://img.shields.io/badge/HuggingFace%20Models-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 25%"></a>
+We provide pre-trained model checkpoints to reproduce the results in our paper. They are hosted on <a href="https://huggingface.co/unilight/sheet-models"><img src="https://img.shields.io/badge/HuggingFace%20Models-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 15%"></a>, and you can see all the supported models in the model repo.
 
-To 
+The pre-trained models can be downloaded by executing stage 1 in each recipe.
+
+```bash
+./run.sh --stage 1 --stop_stage 1
+```
+
+The downloaded models will be in stored in `exp/pt_<model_tag>_<seed>`. For example, `exp/pt_ssl-mos-wav2vec2-2337`. Then, you can follow the instructions [here](#structure-of-each-benchmark-recipe-benchmarksrun_xxx_testsh) to run inference on all benchmarks.
 
 ### Get the test sets in MOS-Bench
 
 This section is for users who don't want to train SSQA models but just want to get the test sets.
 The design is that **you don't need to run the installation, which can be time-consuming.**
 
+#### Data preparation
+
 First, please set the following two variables in `egs/BENCHMARKS/get_all_bencmarks_installation_free.sh`:
 - `db_root`: the root directory to save the raw datsets, including the wav files.
 - `datadir`: the directory to save the `csv` files.
+
+Then, executing the commands below.
 
 ```bash
 cd egs/BENCHMARKS
@@ -178,8 +188,29 @@ cd egs/BENCHMARKS
 # for certain datasets (ex., BVCC or BC19), folow the instructions to finish downloading.
 ./utils/BENCHMARKS/get_all_bencmarks_installation_free.sh --stage -1 --stop_stage -1
 
-# data preparation
+# data preparation. this step generates the csv files.
 ./utils/BENCHMARKS/get_all_bencmarks_installation_free.sh --stage 0 --stop_stage 0
+```
+
+After the data preparation stage is done, you should get the .csv files in `datadir`. Each csv file contains the following columns:
+
+- `wav_path`: **Absolute** paths to the wav files.
+- `system_id`: System ID. This is usually for synthetic datasets. For some datasets, this is set to a dump ID.
+- `sample_id`: Sample ID. Should be unique within one single dataset.
+- `avg_score`: The ground truth MOS of the sample.
+
+#### Metric calculation
+
+You may then use your MOS predictor to run inference over the samples in the test set csv files. We suggest you to overwrite (or resave) the csv file by adding a ``answer`` column. Then, you can use the following command to calculate the metrics. Here we provide an example results csv file in [assets/example_results.csv](../assets/example_results.csv), which is based on BVCC test.
+
+```python
+python utils/calculate_metrics.py --csv assets/example_results.csv
+```
+
+The result will be:
+
+```
+[UTT][ MSE = 0.271 | LCC = 0.867 | SRCC = 0.870 | KTAU = 0.693 ] [SYS][ MSE = 0.123 | LCC = 0.9299 | SRCC = 0.9302  | KTAU = 0.777 ]
 ```
 
 ## Training datasets in MOS-Bench
