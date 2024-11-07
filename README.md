@@ -10,7 +10,8 @@
 </p>
 
 <p align="center">
-    <a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 30%; display: block; margin: auto;"></a>
+  [![arXiv](https://img.shields.io/badge/arXiv-2411.03715-b31b1b.svg)](https://arxiv.org/abs/2411.03715)
+    <a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 20%; display: block; margin: auto;"></a>
 </p>
 
 ## Table of Contents
@@ -130,7 +131,7 @@ We utilize `torch.hub` to provide a convenient way to load pre-trained SSQA mode
 ```
 
 Or you can try out our HuggingFace Spaces Demo!
-<a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 30%; display: block;"></a>
+<a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 20%; display: block;"></a>
 
 ## Instsallation 
 
@@ -150,7 +151,17 @@ make
 
 If you use the training scripts, benchmarking scripts or pre-trained models from this project, please consider citing the following paper.
 
-(To be updated)
+```
+@article{huang2024,
+      title={MOS-Bench: Benchmarking Generalization Abilities of Subjective Speech Quality Assessment Models}, 
+      author={Wen-Chin Huang and Erica Cooper and Tomoki Toda},
+      year={2024},
+      eprint={2411.03715},
+      archivePrefix={arXiv},
+      primaryClass={cs.SD},
+      url={https://arxiv.org/abs/2411.03715}, 
+}
+```
 
 ### Acknowledgements
 
