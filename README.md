@@ -9,10 +9,7 @@
 <b>MOS-Bench</b> is a benchmark designed to benchmark the generalization abilities of subjective speech quality assessment (SSQA) models. <b>SHEET</b> stands for the <b>S</b>peech <b>H</b>uman <b>E</b>valuation <b>E</b>stimation <b>T</b>oolkit. SHEET was designed to conduct research experiments with MOS-Bench.
 </p>
 
-<p align="center">
-  [![arXiv](https://img.shields.io/badge/arXiv-2411.03715-b31b1b.svg)](https://arxiv.org/abs/2411.03715)
-    <a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 20%; display: block; margin: auto;"></a>
-</p>
+[![arXiv](https://img.shields.io/badge/arXiv-2411.03715-b31b1b.svg)](https://arxiv.org/abs/2411.03715) <a href="https://huggingface.co/spaces/unilight/sheet-demo"><img src="https://img.shields.io/badge/HuggingFace%20Spaces%20Demo-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 18%; display: block; margin: auto;"></a>
 
 ## Table of Contents
 - [Key Features](#key-features)
