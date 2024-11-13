@@ -117,6 +117,8 @@ We utilize `torch.hub` to provide a convenient way to load pre-trained SSQA mode
 ```python
 # load pre-trained model
 >>> predictor = torch.hub.load("unilight/sheet:v0.1.0", "default", trust_repo=True, force_reload=True)
+# if you want to use cuda
+>>> predictor.model.cuda()
 
 # you can either provide a path to your wav file
 >>> predictor.predict(wav_path="/path/to/wav/file.wav")
@@ -124,6 +126,9 @@ We utilize `torch.hub` to provide a convenient way to load pre-trained SSQA mode
 
 # or provide a torch tensor with shape [num_samples]
 >>> predictor.predict(wav=torch.rand(16000))
+1.5806346
+# if you put the model on cuda...
+>>> predictor.predict(wav=torch.rand(16000).cuda())
 1.5806346
 ```
 
