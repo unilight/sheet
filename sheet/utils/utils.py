@@ -54,6 +54,20 @@ def read_csv(path, dict_reader=False, lazy=False):
 
     return contents, fieldnames
 
+def write_csv(data, path):
+    """Write data to the output path.
+
+    Args:
+        path (str): path to the output csv file
+        data (list): a list of dicts
+
+    """
+    fieldnames = list(data[0].keys())
+    with open(path, "w", newline="") as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for line in data:
+            writer.writerow(line)
 
 def find_files(root_dir, query="*.wav", include_root_dir=True):
     """Find files recursively.

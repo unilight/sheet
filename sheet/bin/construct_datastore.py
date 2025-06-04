@@ -7,10 +7,10 @@
 """Construct datastore ."""
 
 import argparse
-import h5py
 import logging
 import os
 
+import h5py
 import numpy as np
 import sheet
 import sheet.datasets
@@ -25,7 +25,8 @@ def main():
     """Construct datastore."""
     parser = argparse.ArgumentParser(
         description=(
-            "Construct datastore with ssl_model in trained model " "(See detail in bin/construct_datastore.py)."
+            "Construct datastore with ssl_model in trained model "
+            "(See detail in bin/construct_datastore.py)."
         )
     )
     parser.add_argument(
@@ -82,7 +83,7 @@ def main():
 
     # check directory existence
     # if not os.path.exists(args.outdir):
-        # os.makedirs(args.outdir)
+    # os.makedirs(args.outdir)
 
     # load config
     if args.config is None:
@@ -147,7 +148,17 @@ def main():
             model_lengths = model_input.new_tensor([model_input.size(1)]).long()
 
             all_encoder_outputs, _ = ssl_model(model_input, model_lengths)
-            embed = torch.mean(all_encoder_outputs[config["model_params"]["ssl_model_layer_idx"]].squeeze(0), dim=0).detach().cpu().numpy()
+            embed = (
+                torch.mean(
+                    all_encoder_outputs[
+                        config["model_params"]["ssl_model_layer_idx"]
+                    ].squeeze(0),
+                    dim=0,
+                )
+                .detach()
+                .cpu()
+                .numpy()
+            )
 
             system_id = batch["system_id"]
             sample_id = batch["sample_id"]
@@ -159,6 +170,7 @@ def main():
 
     hdf5_file.flush()
     hdf5_file.close()
+
 
 if __name__ == "__main__":
     main()

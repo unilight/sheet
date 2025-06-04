@@ -37,6 +37,8 @@ def calculate(
 def get_parser():
     parser = argparse.ArgumentParser(description="calculate metrics given an input csv file.")
     parser.add_argument("--csv", required=True, type=str, help="input csv file")
+    parser.add_argument("--answer_column", default="answer", type=str, help="the column that stores predicted scores. default to be `answer`")
+    parser.add_argument("--gt_column", default="avg_score", type=str, help="the column that stores GT scores. default to be `avg_score`")
     return parser
 
 def main():
@@ -51,8 +53,8 @@ def main():
 
     for item in contents:
         sys_name = item["system_id"]
-        answer = float(item["answer"])
-        avg_score = float(item["avg_score"])
+        answer = float(item[args.answer_column])
+        avg_score = float(item[args.gt_column])
         eval_results["pred_mean_scores"].append(answer)
         eval_results["true_mean_scores"].append(avg_score)
         

@@ -259,7 +259,9 @@ def main():
         if args.checkpoint != "":
             if os.path.islink(args.checkpoint):
                 model.load_state_dict(
-                    torch.load(os.readlink(args.checkpoint), map_location="cpu")["model"]
+                    torch.load(os.readlink(args.checkpoint), map_location="cpu")[
+                        "model"
+                    ]
                 )
             else:
                 model.load_state_dict(
