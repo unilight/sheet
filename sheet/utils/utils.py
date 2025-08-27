@@ -19,7 +19,7 @@ def get_basename(path):
     return os.path.splitext(os.path.split(path)[-1])[0]
 
 
-def read_csv(path, dict_reader=False, lazy=False):
+def read_csv(path, dict_reader=False, lazy=False, encoding=None):
     """
 
     If `dict_reader` is set to True, then return <list, fieldnames>.
@@ -39,7 +39,7 @@ def read_csv(path, dict_reader=False, lazy=False):
 
     """
 
-    with open(path, newline="") as csvfile:
+    with open(path, newline="", encoding=encoding) as csvfile:
         if dict_reader:
             reader = csv.DictReader(csvfile)
             fieldnames = reader.fieldnames

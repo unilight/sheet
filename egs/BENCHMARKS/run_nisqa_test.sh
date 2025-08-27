@@ -24,6 +24,8 @@ target_sampling_rate=16000
 
 # training related setting
 tag=""     # tag for directory to save model
+
+datastore_path=
            
 # decoding related setting
 test_sets="LIVETALK FOR P501"
@@ -116,6 +118,10 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     [ -z "${checkpoint}" ] && checkpoint="${expdir}/checkpoint-best.pkl"
     outdir="${expdir}/results/np_$(basename "${checkpoint}" .pkl)/${np_inference_mode}"
 
+    if [ -z ${datastore_path} ]; then
+        datastore_path="${expdir}/datastore/$(basename "${checkpoint}" .pkl)/datastore.h5"
+    fi
+
     for name in ${test_sets}; do
         name="nisqa_${name}"
         [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
@@ -124,7 +130,7 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/${name}/inference.log" \
             nonparametric_inference.py \
                 --config "${expdir}/config.yml" \
-                --datastore "${expdir}/datastore/$(basename "${checkpoint}" .pkl)/datastore.h5" \
+                --datastore "${datastore_path}" \
                 --csv-path "${datadir}/${name}.csv" \
                 --checkpoint "${checkpoint}" \
                 --outdir "${outdir}/${name}" \
@@ -134,4 +140,24 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         grep "UTT" "${outdir}/${name}/inference.log"
     done
     echo "Successfully finished inference."
+fi
+
+## Experimental ####################################################################
+
+if [ "${stage}" -le 4 ] && [ "${stop_stage}" -ge 4 ]; then
+    echo "Stage 4: SpeechLMScore inference"
+    # shellcheck disable=SC2012
+
+    outdir="exp/speechlmscore"
+    for name in ${test_sets}; do
+        name="nisqa_${name}"
+        [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
+        utils/run_speechlmscore.sh \
+            --pretrained_model_dir "downloads" \
+            --csv-path "${datadir}/${name}.csv" \
+            --outdir "${outdir}/${name}"
+        echo "Successfully finished inference of ${name} set."
+        python utils/calculate_metrics.py --csv "${outdir}/${name}/results.csv"
+    done
+    echo "Successfully finished SpeechLMScore inference."
 fi

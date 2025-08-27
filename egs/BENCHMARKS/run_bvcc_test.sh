@@ -27,7 +27,7 @@ tag=""     # tag for directory to save model
 datastore_path=
            
 # decoding related setting
-test_sets="dev test"
+test_sets="test"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -47,11 +47,10 @@ if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     ../bvcc/local/data_download.sh ${bvcc_db_root}
 fi
 
-
-mkdir -p "${datadir}"
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
+    mkdir -p "${datadir}"
     ../bvcc/local/data_prep.py \
         --original-path "${bvcc_db_root}/sets/DEVSET" --wavdir "${bvcc_db_root}/wav" --out "${datadir}/bvcc_dev.csv" --domain-idx "${domain_idx}"
     ../bvcc/local/data_prep.py \
@@ -175,4 +174,24 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         grep "UTT" "${outdir}/${name}/inference.log"
     done
     echo "Successfully finished inference."
+fi
+
+## Experimental ####################################################################
+
+if [ "${stage}" -le 4 ] && [ "${stop_stage}" -ge 4 ]; then
+    echo "Stage 4: SpeechLMScore inference"
+    # shellcheck disable=SC2012
+
+    outdir="exp/speechlmscore"
+    for name in ${test_sets}; do
+        name="bvcc_${name}"
+        [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
+        utils/run_speechlmscore.sh \
+            --pretrained_model_dir "downloads" \
+            --csv-path "${datadir}/${name}.csv" \
+            --outdir "${outdir}/${name}"
+        echo "Successfully finished inference of ${name} set."
+        python utils/calculate_metrics.py --csv "${outdir}/${name}/results.csv"
+    done
+    echo "Successfully finished SpeechLMScore inference."
 fi

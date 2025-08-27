@@ -26,7 +26,7 @@ target_sampling_rate=16000
 tag=""     # tag for directory to save model
            
 # decoding related setting
-test_sets="tmhintqi_dev tmhintqi_test"
+test_sets="tmhintqi_test"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)

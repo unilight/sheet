@@ -25,7 +25,7 @@ domain_idx=0
 tag=""     # tag for directory to save model
            
 # decoding related setting
-test_sets="singmos_dev singmos_test"
+test_sets="singmos_test"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
