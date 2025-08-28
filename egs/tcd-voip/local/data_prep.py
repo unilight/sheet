@@ -15,7 +15,23 @@ import soundfile as sf
 import sys
 from tqdm import tqdm
 
-from sheet.utils import read_csv
+# The following function(s) is(are) the same as in sheet.utils.utils
+# copied here for installation-free data preparation
+def read_csv(path, dict_reader=False, lazy=False):
+    with open(path, newline="") as csvfile:
+        if dict_reader:
+            reader = csv.DictReader(csvfile)
+            fieldnames = reader.fieldnames
+        else:
+            reader = csv.reader(csvfile)
+            fieldnames = None
+
+        if lazy:
+            contents = reader
+        else:
+            contents = [line for line in reader]
+
+    return contents, fieldnames
 
 
 def main():

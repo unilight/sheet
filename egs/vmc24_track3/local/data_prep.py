@@ -19,6 +19,7 @@ import sys
 
 import numpy as np
 
+
 # The following function(s) is(are) the same as in sheet.utils.utils
 # copied here for installation-free data preparation
 def read_csv(path, dict_reader=False, lazy=False):
@@ -36,6 +37,7 @@ def read_csv(path, dict_reader=False, lazy=False):
             contents = [line for line in reader]
 
     return contents, fieldnames
+
 
 def str2bool(value: str) -> bool:
     return bool(strtobool(value))
@@ -86,7 +88,9 @@ def main():
         sample_id = line["systems"]
         system_id = sample_id
         score = float(line["OVR"])
-        wav_path = os.path.join(args.wavdir, "voicemos2024-track3-" + sample_id + ".wav")
+        wav_path = os.path.join(
+            args.wavdir, "voicemos2024-track3-" + sample_id + ".wav"
+        )
         assert os.path.isfile(wav_path), f"{wav_path} does not exist."
 
         item = {
