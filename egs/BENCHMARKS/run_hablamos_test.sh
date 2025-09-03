@@ -17,8 +17,8 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-es_tts_mos_db_root=/data/group1/z44476r/Corpora/es-tts-mos # change this to your dataset folder
-datadir="../es-tts-mos/data"
+hablamos_db_root=/data/group1/z44476r/Corpora/hablamos # change this to your dataset folder
+datadir="../hablamos/data"
 domain_idx=0
 target_sampling_rate=16000
 
@@ -26,7 +26,7 @@ target_sampling_rate=16000
 tag=""     # tag for directory to save model
            
 # decoding related setting
-test_sets="es_tts_mos_test"
+test_sets="hablamos_test"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -51,10 +51,10 @@ mkdir -p "${datadir}"
 if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
-    ../es-tts-mos/local/data_prep.py \
-        --wavdir "${es_tts_mos_db_root}" \
+    ../hablamos/local/data_prep.py \
+        --wavdir "${hablamos_db_root}" \
         --original-path "${datadir}/originals/test.csv" \
-        --out "${datadir}/es_tts_mos_test.csv"
+        --out "${datadir}/hablamos_test.csv"
 fi
 
 if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then

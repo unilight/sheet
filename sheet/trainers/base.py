@@ -73,7 +73,7 @@ class Trainer(object):
         self.backward_steps = 0
         self.all_loss = 0.0
         self.tqdm = tqdm(
-            initial=self.steps, total=self.config["train_max_steps"], desc="[train]"
+            initial=self.steps, total=self.config["train_max_steps"], desc="[train]", mininterval=5, maxinterval=5,
         )
         while True:
             # train one epoch
@@ -139,11 +139,6 @@ class Trainer(object):
         for train_steps_per_epoch, batch in enumerate(self.data_loader["train"], 1):
             # train one step
             self._train_step(batch)
-
-            # manually update tqdm
-            if self.steps > 1 and self.steps % 10 == 0:
-                self.tqdm.update(10)
-
             if self.backward_steps % self.gradient_accumulate_steps > 0:
                 continue
 

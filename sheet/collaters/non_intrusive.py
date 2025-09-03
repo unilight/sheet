@@ -33,6 +33,16 @@ class NonIntrusiveCollater(object):
         items["avg_scores"] = torch.tensor(
             [sorted_batch[i]["avg_score"] for i in range(bs)], dtype=torch.float
         )
+        if "categorical_score" in all_keys:
+            items["categorical_scores"] = torch.tensor(
+                [sorted_batch[i]["categorical_score"] for i in range(bs)],
+                dtype=torch.float,
+            )
+        if "categorical_avg_score" in all_keys:
+            items["categorical_avg_scores"] = torch.tensor(
+                [sorted_batch[i]["categorical_avg_score"] for i in range(bs)],
+                dtype=torch.float,
+            )
         if "listener_id" in all_keys:
             items["listener_ids"] = [sorted_batch[i]["listener_id"] for i in range(bs)]
         if "listener_idx" in all_keys:

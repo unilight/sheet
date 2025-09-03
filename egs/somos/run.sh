@@ -27,7 +27,7 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
            
 # decoding related setting
-test_sets="dev test"
+test_sets="somos_dev"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -103,8 +103,8 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train.log" \
         ${train} \
             --config "${conf}" \
-            --train-csv-path "data/train.csv" \
-            --dev-csv-path "data/dev.csv" \
+            --train-csv-path "data/somos_train.csv" \
+            --dev-csv-path "data/somos_dev.csv" \
             --outdir "${expdir}" \
             --resume "${resume}" \
             --verbose "${verbose}" \

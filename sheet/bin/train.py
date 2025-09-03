@@ -12,7 +12,6 @@ import os
 import sys
 
 import humanfriendly
-
 import numpy as np
 import sheet
 import sheet.collaters
@@ -22,9 +21,8 @@ import sheet.models
 import sheet.trainers
 import torch
 import yaml
-from torch.utils.data import DataLoader
-
 from sheet.schedulers import get_scheduler
+from torch.utils.data import DataLoader
 
 # scheduler_classes = dict(warmuplr=WarmupLR)
 
@@ -169,6 +167,7 @@ def main():
         sheet.datasets,
         config.get("dataset_type", "NonIntrusiveDataset"),
     )
+    logging.info(f"Loading training set from {args.train_csv_path}.")
     train_dataset = dataset_class(
         csv_path=args.train_csv_path,
         target_sample_rate=config["sampling_rate"],
@@ -180,8 +179,10 @@ def main():
         categorical=config.get("categorical", False),
         categorical_step=config.get("categorical_step", 1.0),
         allow_cache=config["allow_cache"],
+        load_wav_cache=config.get("load_wav_cache", False),
     )
     logging.info(f"The number of training files = {len(train_dataset)}.")
+    logging.info(f"Loading development set from {args.dev_csv_path}.")
     dev_dataset = dataset_class(
         csv_path=args.dev_csv_path,
         target_sample_rate=config["sampling_rate"],
@@ -189,7 +190,9 @@ def main():
         wav_only=True,
         use_phoneme=config.get("use_phoneme", False),
         symbols=config.get("symbols", None),
-        allow_cache=config["allow_cache"],
+        allow_cache=False,
+        # allow_cache=config["allow_cache"],
+        # load_wav_cache=config.get("load_wav_cache", False),
     )
     logging.info(f"The number of development files = {len(dev_dataset)}.")
     dataset = {
@@ -275,7 +278,18 @@ def main():
             }
             for criterion_dict in config["mean_score_criterions"]
         ]
-    if config["listener_score_criterions"] is not None:
+    if config.get("categorical_head_criterions", None) is not None:
+        criterion["categorical_head_criterions"] = [
+            {
+                "type": criterion_dict["criterion_type"],
+                "criterion": getattr(sheet.losses, criterion_dict["criterion_type"])(
+                    **criterion_dict["criterion_params"]
+                ),
+                "weight": criterion_dict["criterion_weight"],
+            }
+            for criterion_dict in config["categorical_head_criterions"]
+        ]
+    if config.get("listener_score_criterions", None) is not None:
         criterion["listener_score_criterions"] = [
             {
                 "type": criterion_dict["criterion_type"],

@@ -76,7 +76,7 @@ class CategoricalLoss(nn.Module):
         ce = criterion(y_hat, label)
         return torch.mean(ce)
 
-    def forward(self, pred_score, gt_score, lens, device):
+    def forward(self, pred_score, gt_score, device, lens=None):
         # make mask
         if self.masked_loss:
             masks = make_non_pad_mask(lens).to(device)

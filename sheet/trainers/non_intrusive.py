@@ -14,19 +14,18 @@ import numpy as np
 import soundfile as sf
 import torch
 from sheet.evaluation.metrics import calculate
-
-from sheet.utils.model_io import (
-    filter_modules,
-    get_partial_state_dict,
-    transfer_verification,
-    print_new_keys,
-)
 from sheet.evaluation.plot import (
     plot_sys_level_scatter,
     plot_utt_level_hist,
     plot_utt_level_scatter,
 )
 from sheet.trainers.base import Trainer
+from sheet.utils.model_io import (
+    filter_modules,
+    get_partial_state_dict,
+    print_new_keys,
+    transfer_verification,
+)
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -100,21 +99,53 @@ class NonIntrusiveEstimatorTrainer(Trainer):
         # get ground truth scores
         gt_scores = batch["scores"].to(self.device)
         gt_avg_scores = batch["avg_scores"].to(self.device)
+        if "categorical_scores" in batch:
+            categorical_gt_scores = batch["categorical_scores"].to(self.device)
+        if "categorical_avg_scores" in batch:
+            categorical_gt_avg_scores = batch["categorical_avg_scores"].to(self.device)
 
         # mean loss
         if "mean_score_criterions" in self.criterion:
             for criterion_dict in self.criterion["mean_score_criterions"]:
+                if criterion_dict["type"] in ["GaussianNLLLoss", "LaplaceNLLLoss"]:
+                    loss = criterion_dict["criterion"](
+                        outputs["mean_scores"],
+                        outputs["mean_scores_logvar"],
+                        gt_avg_scores,
+                        self.device,
+                        lens=output_frame_lengths,
+                    )
+                else:
+                    # always pass the following arguments
+                    loss = criterion_dict["criterion"](
+                        outputs["mean_scores"],
+                        (
+                            categorical_gt_avg_scores
+                            if criterion_dict["type"] == "CategoricalLoss"
+                            else gt_avg_scores
+                        ),
+                        self.device,
+                        lens=output_frame_lengths,
+                    )
+                gen_loss += loss * criterion_dict["weight"]
+                self.total_train_loss["train/mean_" + criterion_dict["type"]] += (
+                    loss.item() / self.gradient_accumulate_steps
+                )
+
+        # categorical head loss (for RAMP only)
+        if "categorical_head_criterions" in self.criterion:
+            for criterion_dict in self.criterion["categorical_head_criterions"]:
                 # always pass the following arguments
                 loss = criterion_dict["criterion"](
-                    outputs["mean_scores"],
-                    gt_avg_scores,
+                    outputs["categorical_head_scores"],
+                    categorical_gt_avg_scores,
                     self.device,
-                    lens = output_frame_lengths,
+                    lens=output_frame_lengths,
                 )
                 gen_loss += loss * criterion_dict["weight"]
-                self.total_train_loss[
-                    "train/mean_" + criterion_dict["type"]
-                ] += loss.item()
+                self.total_train_loss["train/categorical_head_loss"] += (
+                    loss.item() / self.gradient_accumulate_steps
+                )
 
         # listener loss
         if "listener_score_criterions" in self.criterion:
@@ -122,31 +153,46 @@ class NonIntrusiveEstimatorTrainer(Trainer):
                 # always pass the following arguments
                 loss = criterion_dict["criterion"](
                     outputs["ld_scores"],
-                    gt_scores,
+                    (
+                        categorical_gt_scores
+                        if criterion_dict["type"] == "CategoricalLoss"
+                        else gt_scores
+                    ),
                     self.device,
-                    lens = output_frame_lengths,
+                    lens=output_frame_lengths,
                 )
                 gen_loss += loss * criterion_dict["weight"]
-                self.total_train_loss[
-                    "train/listener_" + criterion_dict["type"]
-                ] += loss.item()
+                self.total_train_loss["train/listener_" + criterion_dict["type"]] += (
+                    loss.item() / self.gradient_accumulate_steps
+                )
 
-        self.total_train_loss["train/loss"] += gen_loss.item()
+        self.total_train_loss["train/loss"] += (
+            gen_loss.item() / self.gradient_accumulate_steps
+        )
 
         # update model
-        self.optimizer.zero_grad()
+        if self.gradient_accumulate_steps > 1:
+            gen_loss = gen_loss / self.gradient_accumulate_steps
         gen_loss.backward()
+        self.all_loss += loss.item()
+
+        self.backward_steps += 1
+        if self.backward_steps % self.gradient_accumulate_steps > 0:
+            return
+
         if self.config["grad_norm"] > 0:
             torch.nn.utils.clip_grad_norm_(
                 self.model.parameters(),
                 self.config["grad_norm"],
             )
         self.optimizer.step()
+        self.optimizer.zero_grad()
         if self.scheduler is not None:
             self.scheduler.step()
 
         # update counts
         self.steps += 1
+        self.tqdm.update(1)
         self._check_train_finish()
 
     @torch.no_grad()

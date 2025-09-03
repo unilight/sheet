@@ -5,7 +5,7 @@
 #  MIT License (https://opensource.org/licenses/MIT)
 
 """
-Data preparation for ES-TTS-MOS, described in the paper titled
+Data preparation for HablaMOS, described in the paper titled
 `A Dataset for Automatic Assessment of TTS Quality in Spanish`
 by Alejandro Sosa Welford, Leonardo Pepino.
 https://arxiv.org/abs/2507.01805
@@ -82,7 +82,7 @@ def main():
     metadata = []
     for line in tqdm(filelist):
         sample_id = line["sample_id"]
-        system_id = line["system_id"]
+        system_id = line["speaker_id"] # treat each speaker as separate system
         score = float(line["score"])
         speaker_id = line["speaker_id"]
         duration_ms = line["duration_ms"]
