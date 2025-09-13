@@ -1,0 +1,81 @@
+###########################################################
+#                DATA AND TASK SETTING                    #
+###########################################################
+# task: NonIntrusiveAbsoluteRating
+dataset_type: NonIntrusiveDataset
+collater_type: NonIntrusiveCollater
+trainer_type: NonIntrusiveEstimatorTrainer
+sampling_rate: 16000                # Sampling rate.
+model_input: waveform               # choices: waveform, mag_sgram
+
+###########################################################
+#              NETWORK ARCHITECTURE SETTING               #
+###########################################################
+model_type: "SSLMOS"
+model_params:
+    ssl_module: "s3prl"
+    s3prl_name: "hubert_large_ll60k"
+    ssl_model_output_dim: 1024
+    ssl_model_layer_idx: -1
+
+    mean_net_dnn_dim: 64
+    mean_net_output_type: "scalar"
+    mean_net_range_clipping: True
+
+    use_listener_modeling: False
+    use_mean_listener: False
+    
+###########################################################
+#                      LOSS SETTING                       #
+###########################################################
+mean_score_criterions:
+    - criterion_type: "ScalarLoss"
+      criterion_weight: 1.0
+      criterion_params:
+        order: 1
+        tau: 0.5
+        masked_loss: False
+listener_score_criterions: null
+
+###########################################################
+#                   INFERENCE SETTING                     #
+###########################################################
+inference_mode: mean_net    # this is used for
+                            # (1) evaluation in the training loop
+                            # (2) default inference mode
+
+###########################################################
+#                  DATA LOADER SETTING                    #
+###########################################################
+train_batch_size: 16
+test_batch_size: 1
+padding_mode: "repetitive"  # repetitive, zero_padding
+wav_only: True              # Reduce to average only even for the training data.
+                            # Set to True usually if no use listener modeling at all (ex. SSL-MOS)
+pin_memory: true            # Whether to pin memory in Pytorch DataLoader.
+num_workers: 0              # Number of workers in Pytorch DataLoader.
+allow_cache: true           # Whether to allow cache in dataset. If true, it requires cpu memory.
+
+###########################################################
+#             OPTIMIZER & SCHEDULER SETTING               #
+###########################################################
+optimizer_type: SGD
+optimizer_params:
+    lr: 1.0e-3
+    # the following params come from
+    # https://github.com/pytorch/vision/blob/c2ab0c59f42babf9ad01aa616cd8a901daac86dd/references/classification/train.py#L172-L173
+    momentum: 0.9
+grad_norm: 1.0              # Gradient norm.
+scheduler_type: null
+
+###########################################################
+#                    INTERVAL SETTING                     #
+###########################################################
+train_max_steps: 100000                 # Number of training steps.
+eval_and_save_interval_steps: 100       # Interval steps to do evaluation and save checkpoint.
+log_interval_steps: 100                 # Interval steps to record the training log.
+keep_nbest_models: 5                    # number of models to keep
+patience: 20                            # patience for early stopping
+best_model_criterion:                   # criterion to save the best models
+    key: utt_SRCC
+    order: highest                      # choices: lowest, highest
