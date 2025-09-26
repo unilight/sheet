@@ -5,7 +5,7 @@
 
 """torch.hub configuration."""
 
-dependencies = ["torch", "torchaudio", "sheet_sqa"]
+dependencies = ["torch", "torchaudio", "sheet"]
 
 import os
 import torch
@@ -156,7 +156,7 @@ def all8_sslmos_wavlm_large(progress: bool = True, cpu=True):
 
     # init model
     if config["model_type"] == "SSLMOS":
-        from sheet_sqa.models.sslmos import SSLMOS
+        from sheet.models.sslmos import SSLMOS
         model = SSLMOS(
             config["model_input"],
             **config["model_params"],
