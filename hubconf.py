@@ -129,18 +129,28 @@ def default(progress: bool = True):
 
     return predictor
 
-def all8_sslmos_wavlm_large(progress: bool = True):
+def all8_sslmos_wavlm_large(progress: bool = True, cpu=True):
     """
     SSL-MOS model trained with all EIGHT training sets in MOS-Bench, as of Sep 2025.
 
     Args:
         progress - Whether to show model checkpoint load progress
+        cpu - Whether to use cpu. If False, then map_location="cuda"
     """
 
+    if cpu:
+        map_location = "cpu"
+    else:
+        map_location = "cuda"
+
     # get config
-    config_dst = os.path.join(torch.hub.get_dir(), "configs", os.path.basename(URLS["default"]["conf"]))
     os.makedirs(os.path.join(torch.hub.get_dir(), "configs"), exist_ok=True)
-    torch.hub.download_url_to_file(URLS["default"]["conf"], dst=config_dst)
+    hf_hub_download(
+        repo_id="unilight/sheet-models",
+        filename="bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos/sslmos-wavlm_large/1337/config.yml",
+        local_dir=os.path.join(torch.hub.get_dir(), "configs")
+    )
+    config_dst = os.path.join(torch.hub.get_dir(), "configs", "config.yml")
     with open(config_dst) as f:
         config = yaml.load(f, Loader=yaml.Loader)
 
@@ -152,9 +162,19 @@ def all8_sslmos_wavlm_large(progress: bool = True):
             **config["model_params"],
         )
 
+    # download model
+    local_model_dir = os.path.join(torch.hub.get_dir(), "models")
+    os.makedirs(local_model_dir, exist_ok=True)
+    hf_hub_download(
+        repo_id="unilight/sheet-models",
+        filename="bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos/sslmos-wavlm_large/1337/checkpoint-best.bin",
+        local_dir=local_model_dir
+    )
+
     # load model
-    state_dict = torch.hub.load_state_dict_from_url(url=URLS["default"]["model"], map_location="cpu", progress=progress)
-    model.load_state_dict(state_dict)
+    # state_dict = torch.hub.load(local_model_dir, )
+    # state_dict = torch.hub.load_state_dict_from_url(url=URLS["default"]["model"], map_location="cpu", progress=progress)
+    model.load_state_dict(torch.load(os.path.join(local_model_dir, "checkpoint-best.bin"), weights_only=True, map_location=map_location))
     model.eval()
 
     # send model to a Predictor wrapper
