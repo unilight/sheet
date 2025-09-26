@@ -1,0 +1,18 @@
+site_name: SHEET / MOS-Bench
+repo_url: https://github.com/unilight/sheet
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/github
+markdown_extensions:
+  - tables
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+plugins:
+  - search
+nav:
+  - Home: index.md
+  - MOS-Bench: mos-bench.md
+  - Training guide: training.md
+  - Benchmarking guide: benchmarking.md
