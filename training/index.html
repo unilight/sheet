@@ -1,0 +1,799 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../mos-bench/">
+      
+      
+        <link rel="next" href="../benchmarking/">
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.20">
+    
+    
+      
+        <title>Training guide - SHEET / MOS-Bench</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.e53b48f4.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#training-guide" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="SHEET / MOS-Bench" class="md-header__button md-logo" aria-label="SHEET / MOS-Bench" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            SHEET / MOS-Bench
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Training guide
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/unilight/sheet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="SHEET / MOS-Bench" class="md-nav__button md-logo" aria-label="SHEET / MOS-Bench" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    SHEET / MOS-Bench
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/unilight/sheet" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.0.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mos-bench/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    MOS-Bench
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Training guide
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Training guide
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conduct-complete-experiments-training-benchmarking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conduct complete experiments (training &amp; benchmarking)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conduct complete experiments (training &amp; benchmarking)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#structure-of-each-training-recipe-runsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      Structure of each training recipe (run.sh)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure of each training recipe (run.sh)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-download" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data download
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-preparation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data preparation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training" class="md-nav__link">
+    <span class="md-ellipsis">
+      Training
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structure-of-each-benchmark-recipe-benchmarksrun_xxx_testsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      Structure of each benchmark recipe (BENCHMARKS/run_XXX_test.sh)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure of each benchmark recipe (BENCHMARKS/run_XXX_test.sh)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-download-preparation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data download &amp; preparation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#non-parametric-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Non-parametric inference
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-all-benchmarks-at-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run all benchmarks at once
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-pre-trained-ssqa-models-to-reproduce-the-paper-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Download pre-trained SSQA models to reproduce the paper results
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../benchmarking/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Benchmarking guide
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#conduct-complete-experiments-training-benchmarking" class="md-nav__link">
+    <span class="md-ellipsis">
+      Conduct complete experiments (training &amp; benchmarking)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Conduct complete experiments (training &amp; benchmarking)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#structure-of-each-training-recipe-runsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      Structure of each training recipe (run.sh)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure of each training recipe (run.sh)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-download" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data download
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-preparation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data preparation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#training" class="md-nav__link">
+    <span class="md-ellipsis">
+      Training
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#structure-of-each-benchmark-recipe-benchmarksrun_xxx_testsh" class="md-nav__link">
+    <span class="md-ellipsis">
+      Structure of each benchmark recipe (BENCHMARKS/run_XXX_test.sh)
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Structure of each benchmark recipe (BENCHMARKS/run_XXX_test.sh)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#data-download-preparation" class="md-nav__link">
+    <span class="md-ellipsis">
+      Data download &amp; preparation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Inference
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Inference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#non-parametric-inference" class="md-nav__link">
+    <span class="md-ellipsis">
+      Non-parametric inference
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#run-all-benchmarks-at-once" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run all benchmarks at once
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#download-pre-trained-ssqa-models-to-reproduce-the-paper-results" class="md-nav__link">
+    <span class="md-ellipsis">
+      Download pre-trained SSQA models to reproduce the paper results
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="training-guide">Training guide</h1>
+<p>We provide complete experiment recipes, i.e., set of scripts to download and process the dataset, train and evaluate models.</p>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>This structure originated from Kaldi, and is also used in many speech processing based repositories (<a href="https://github.com/espnet/espnet">ESPNet</a>, <a href="https://github.com/kan-bayashi/ParallelWaveGAN">ParallelWaveGAN</a>, etc.).</p>
+</div>
+<h2 id="conduct-complete-experiments-training-benchmarking">Conduct complete experiments (training &amp; benchmarking)</h2>
+<p>You can train your own speech quality predictor using the datasets in MOS-Bench. Each The starting point of each recipe is the <code>run.sh</code> file.</p>
+<p>There are two ways you can train models:
+- Train models using a single dataset at a time. This is called "<strong>single dataset training</strong>". You can refer to the <a href="#training-datasets-in-mos-bench">Training datasets in MOS-Bench</a> section for available datasets.
+- Train models by pooling multiple datasets. This is called "<strong>multiple dataset training</strong>". Currently we support the following recipe:
+    - Recipe: <code>egs/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi</code></p>
+<p>After you train your models, you can run benchmarking on the test sets in MOS-Bench.</p>
+<p>Below, we explain the processes of <a href="#structure-of-each-training-recipe-runsh">training</a> and <a href="#structure-of-each-benchmark-recipe-benchmarksrun_xxx_testsh">benchmarking</a>.</p>
+<h3 id="structure-of-each-training-recipe-runsh">Structure of each training recipe (<code>run.sh</code>)</h3>
+<p>For most recipes, by default the SSL-MOS model is used. The configuration file is <code>conf/ssl-mos-wav2vec2.yaml</code>.</p>
+<h4 id="data-download">Data download</h4>
+<div class="highlight"><pre><span></span><code>./run.sh<span class="w"> </span>--stage<span class="w"> </span>-1<span class="w"> </span>--stop_stage<span class="w"> </span>-1
+</code></pre></div>
+<p>By default, the dataset will be put in the <code>downloads</code> folder in each recipe folder. However, you can change the destination to your favor.</p>
+<p>For most datasets, this step automatically calls the <code>local/data_download.sh</code> script to fetch the dataset. However, some datasets (like <code>bvcc</code>) does not come with an one-step automatic download script due to the data policy. In that case, please follow the instructions.</p>
+<h4 id="data-preparation">Data preparation</h4>
+<div class="highlight"><pre><span></span><code>./run.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">0</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">0</span>
+</code></pre></div>
+<p>This step processes the downloaded dataset and generate <code>.csv</code> files for the training and development (and possibly testing) sets. The generated data files are in <code>data</code>. For instance, <code>bvcc/data/bvcc_&lt;train, dev, test&gt;.csv</code> files will be generated.</p>
+<p>The common data format across all recipes is csv. Each csv file always contains the following columns:</p>
+<ul>
+<li><code>wav_path</code>: <strong>Absolute</strong> paths to the wav files.</li>
+<li><code>score</code>: This is the listener-dependent score by default. If not available, then it will be the MOS.</li>
+<li><code>system_id</code>: System ID. This is usually for synthetic datasets. For some datasets, this is set to a dump ID.</li>
+<li><code>sample_id</code>: Sample ID. Should be unique within one single dataset.</li>
+</ul>
+<p>Optionally, the following columns may exist:</p>
+<ul>
+<li><code>listener_id</code>: The original listener ID in the dataset. Only when listener ID is available in the dataset.</li>
+<li><code>listener_idx</code> : A listener <strong>INDEX</strong> for the listener ID. This is an integer scalar.</li>
+<li><code>phoneme</code>: This only exists for BVCC. Not really important.</li>
+<li><code>cluster</code>: This only exists for BVCC. Not really important.</li>
+<li><code>reference</code>: This only exists for BVCC. Not really important.</li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Stage 1 is reserved for pre-trained model download usage Please see <a href="#download-pre-trained-ssqa-models-to-reproduce-the-paper-results">Download pre-trained SSQA models</a> for details..</p>
+</div>
+<h4 id="training">Training</h4>
+<div class="highlight"><pre><span></span><code>./run.sh --stage 2 --stop_stage 2 \
+    --conf &lt;conf/config.yml&gt; --tag &lt;tag&gt; --seed &lt;seed&gt; # these are optionals
+</code></pre></div>
+<p>Training is launched within this stage. All generated artifacts will be saved to a <code>expdir</code>, which is by default <code>exp/ssl-mos-wav2vec2-1337</code>. The <code>1337</code> is the random seed set by <code>--seed</code>. If <code>--tag</code> is specified, then they will be saved in <code>exp/&lt;tag&gt;-1337</code>. The model checkpoints can be found in the expdir.  Also, you can check the <code>exp/ssl-mos-wav2vec2-1337/intermediate_results</code> to see some plots to monitor the training process.</p>
+<h3 id="structure-of-each-benchmark-recipe-benchmarksrun_xxx_testsh">Structure of each benchmark recipe (<code>BENCHMARKS/run_XXX_test.sh</code>)</h3>
+<p>After the <a href="#structure-of-each-training-recipe-runsh">training process described above</a>, <strong>INSIDE THOSE RECIPES</strong> you can follow the commands below to do benchmarking.</p>
+<p>As an example, we assume we trained a model in <code>egs/bvcc</code>, and we want to run inference with the BVCC test set. That is, we will be executing <code>run_bvcc_test.sh</code>.</p>
+<h4 id="data-download-preparation">Data download &amp; preparation</h4>
+<div class="highlight"><pre><span></span><code><span class="c1"># data download.</span>
+<span class="c1"># for certain datasets (ex., BVCC or BC19), folow the instructions to finish downloading.</span>
+./utils/BENCHMARKS/run_bvcc_test.sh<span class="w"> </span>--stage<span class="w"> </span>-1<span class="w"> </span>--stop_stage<span class="w"> </span>-1
+
+<span class="c1"># data preparation</span>
+./utils/BENCHMARKS/run_bvcc_test.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">0</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">0</span>
+</code></pre></div>
+<p>The purpose of this stage is the same as the data download &amp; preparation stage as <a href="#structure-of-each-training-recipe-runsh">described in the training process</a>. The generated data csv files will be stored in the <code>data</code> folder <strong>IN EACH CORRESPONDING TEST SET RECIPE FOLDER</strong>. For instance, for <code>run_bvcc_test.sh</code>, the generated data csv files will be in <code>bvcc/data/bvcc_&lt;dev, test&gt;.sh</code>. This also holds for test sets without training recipes: for instance, <code>run_vmc23_test.sh</code> will generate data csv files to <code>vmc23/data/vmc23_track&lt;1a, 1b, 2, 3&gt;_test</code>.</p>
+<h4 id="inference">Inference</h4>
+<p>The following command runs <strong>parametric inference</strong>.</p>
+<div class="highlight"><pre><span></span><code>./utils/BENCHMARKS/run_bvcc_test.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">1</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\\</span>
+<span class="w">    </span>--conf<span class="w"> </span>&lt;conf/config.yml&gt;<span class="w"> </span>--checkpoint<span class="w"> </span>&lt;checkpoint<span class="w"> </span>file&gt;<span class="w"> </span>--tag<span class="w"> </span>&lt;tag&gt;<span class="w"> </span><span class="c1"># these are optionals</span>
+</code></pre></div>
+<p>Inference is done within this stage. The results will be saved in <code>exp/&lt;expdir&gt;/results/&lt;checkpoint_name&gt;/&lt;test_set_name&gt;/</code>. For instance, <code>exp/ssl-mos-wav2vec2-1337/results/checkpoint-best/bvcc_test</code>. Inside you can find the following files:
+- <code>inference.log</code>: log file of the inference script, along with the calculated metrics.
+- <code>distribution.png</code>: distribution over the score range (1-5).
+- <code>utt_scatter_plot.png</code>: utterance-wise scatter plot of the ground truth and the predicted scores.
+- <code>sys_scatter_plot.png</code>: system-wise scatter plot of the ground truth and the predicted scores.</p>
+<p>By default, the <code>checkpoint-best.pkl</code> is used, which is a symbolic link that points to the best performing model checkpoint (depending on the <code>best_model_criterion</code> field in the config file.) You can specify a different checkpoint file with <code>--checkpoint</code>.</p>
+<h5 id="non-parametric-inference">Non-parametric inference</h5>
+<p>You can also run <strong>non-parametric inference</strong> for certain models. However, not all recipes and models support it.
+- Note: as of 2024.10, currently, only the <code>egs/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi</code> recipe supports non-parametric inference. However, it is not difficult to add it to other recipes. It's just that we haven't testes it yet.</p>
+<p>If you want to run non-parametric inference, you need to prepare the datastore first. This can be done by:</p>
+<div class="highlight"><pre><span></span><code>./run.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">3</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--conf<span class="w"> </span>&lt;conf/config.yml&gt;<span class="w"> </span>--tag<span class="w"> </span>&lt;tag&gt;<span class="w"> </span>--seed<span class="w"> </span>&lt;seed&gt;<span class="w"> </span><span class="c1"># these are optionals</span>
+</code></pre></div>
+<p>Then, you can do non-parametric inference with the following command:</p>
+<div class="highlight"><pre><span></span><code>./utils/BENCHMARKS/run_bvcc_test.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">3</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">3</span><span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--np_inference_mode<span class="w"> </span>&lt;naive_knn/domain_id_knn_1&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--conf<span class="w"> </span>&lt;conf/config.yml&gt;<span class="w"> </span>--checkpoint<span class="w"> </span>--tag<span class="w"> </span>&lt;tag&gt;<span class="w"> </span><span class="c1"># these are optionals</span>
+</code></pre></div>
+<p>Note that the results will be then stored in <code>exp/&lt;expdir&gt;/results/np_&lt;checkpoint_name&gt;/&lt;np_inference_mode&gt;/&lt;test_set_name&gt;/</code>. For instance, <code>egs/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi/exp/alignnet-wav2vec2-2337/results/np_checkpoint-best/naive_knn/bc19_test</code>.</p>
+<h5 id="run-all-benchmarks-at-once">Run all benchmarks at once</h5>
+<p>You can also run all benchmarks at once. First, download and prepare all the benchmark sets.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># data download.</span>
+<span class="c1"># for certain datasets (ex., BVCC or BC19), folow the instructions to finish downloading.</span>
+./utils/BENCHMARKS/get_all_bencmarks.sh<span class="w"> </span>--stage<span class="w"> </span>-1<span class="w"> </span>--stop_stage<span class="w"> </span>-1
+
+<span class="c1"># data preparation</span>
+./utils/BENCHMARKS/get_all_bencmarks.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">0</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">0</span>
+</code></pre></div>
+<p>Then, run inference based on the mode:
+- Parametric inference:
+  <div class="highlight"><pre><span></span><code>./utils/BENCHMARKS/run_all_bencmarks.sh<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--conf<span class="w"> </span>conf/ssl-mos-wav2vec2<span class="w"> </span>--checkpoint<span class="w"> </span>&lt;checkpoint&gt;<span class="w"> </span>--tag<span class="w"> </span>&lt;tag&gt;<span class="w"> </span>--seed<span class="w"> </span>&lt;seed&gt;<span class="w">  </span><span class="c1"># these are optionals</span>
+</code></pre></div>
+- Non-parametric inference:</p>
+<div class="highlight"><pre><span></span><code>./utils/BENCHMARKS/run_all_bencmarks.sh<span class="w"> </span>--np_inference_mode<span class="w"> </span>&lt;naive_knn/domain_id_knn_1&gt;<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--conf<span class="w"> </span>conf/ssl-mos-wav2vec2<span class="w"> </span>--checkpoint<span class="w"> </span>&lt;checkpoint&gt;<span class="w"> </span>--tag<span class="w"> </span>&lt;tag&gt;<span class="w"> </span>--seed<span class="w"> </span>&lt;seed&gt;<span class="w">  </span><span class="c1"># these are optionals</span>
+</code></pre></div>
+<h2 id="download-pre-trained-ssqa-models-to-reproduce-the-paper-results">Download pre-trained SSQA models to reproduce the paper results</h2>
+<p>We provide pre-trained model checkpoints to reproduce the results in our paper. They are hosted on <a href="https://huggingface.co/unilight/sheet-models"><img src="https://img.shields.io/badge/HuggingFace%20Models-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 15%"></a>, and you can see all the supported models in the model repo.</p>
+<p>The pre-trained models can be downloaded by executing stage 1 in each recipe.</p>
+<div class="highlight"><pre><span></span><code>./run.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">1</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">1</span>
+</code></pre></div>
+<p>The downloaded models will be in stored in <code>exp/pt_&lt;model_tag&gt;_&lt;seed&gt;</code>. For example, <code>exp/pt_ssl-mos-wav2vec2-2337</code>. Then, you can follow the instructions <a href="#structure-of-each-benchmark-recipe-benchmarksrun_xxx_testsh">here</a> to run inference on all benchmarks.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": [], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+    
+  </body>
+</html>
