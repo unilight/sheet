@@ -31,7 +31,7 @@ endif
 	touch pytorch.done
 
 sheet.done: virtualenv.done pytorch.done
-	. venv/bin/activate; cd ../; pip install -e .
+	. venv/bin/activate; cd ../; pip install -e .[train]
 	touch sheet.done
 
 apex.done: virtualenv.done pytorch.done

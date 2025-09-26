@@ -12,7 +12,7 @@ import numpy as np
 from scipy.special import softmax
 
 
-class Datastore():
+class Datastore:
     def __init__(
         self,
         datastore_path,
@@ -34,14 +34,14 @@ class Datastore():
                 scores.append(f["scores"][hdf5_path][()])
         embeds = np.stack(embeds, axis=0)
         scores = np.array(scores)
-        
+
         # build index
         index = faiss.IndexFlatL2(embed_dim)
-        if device.type == 'cuda':
+        if device.type == "cuda":
             # index = faiss.index_cpu_to_gpu(faiss.StandardGpuResources(), 0, index)
             index = faiss.index_cpu_to_all_gpus(index, ngpu=1)
         # else:
-            # embeds = torch.tensor(embeds, device=device)
+        # embeds = torch.tensor(embeds, device=device)
         index.add(embeds)
 
         self.embeds = embeds
@@ -53,15 +53,15 @@ class Datastore():
         # search
         distances, I = self.index.search(query, k)
         scores = np.stack([self.scores[row] for row in I])
-        ret = {
-            "distances": distances,
-            "scores": scores
-        }
+        ret = {"distances": distances, "scores": scores}
 
         if search_only:
             return ret
 
-        inv_dist = 1 / (distances + 1e-8)
+        # NOTE(unilight) 20250205: change to negative
+        # inv_dist = 1 / (distances + 1e-8)
+        inv_dist = -distances
+
         norm_dist = softmax(inv_dist, axis=1)
 
         mult = np.multiply(norm_dist, scores)

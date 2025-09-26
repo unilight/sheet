@@ -1,14 +1,17 @@
+# -*- coding: utf-8 -*-
+
+# Copyright 2025 Wen-Chin Huang
+#  MIT License (https://opensource.org/licenses/MIT)
+
 """torch.hub configuration."""
 
-dependencies = ["torch", "torchaudio"]
+dependencies = ["torch", "torchaudio", "sheet_sqa"]
 
 import os
 import torch
 import torch.nn.functional as F
 import torchaudio
 import yaml
-
-from sheet.utils.download import _urls_to_filepaths
 
 FS = 16000
 resamplers = {}
@@ -18,7 +21,12 @@ URLS = {
     "default": {
         "conf": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-config.yml",
         "model": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-checkpoint-86000steps.pkl",
-    }
+    },
+    "all8_sslmos_wavlm_large": {
+        "conf": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-config.yml",
+        "model": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-checkpoint-86000steps.pkl",
+    },
+
 }
 
 def read_wav(wav_path):
@@ -106,6 +114,39 @@ def default(progress: bool = True):
     # init model
     if config["model_type"] == "SSLMOS":
         from sheet.models.sslmos import SSLMOS
+        model = SSLMOS(
+            config["model_input"],
+            **config["model_params"],
+        )
+
+    # load model
+    state_dict = torch.hub.load_state_dict_from_url(url=URLS["default"]["model"], map_location="cpu", progress=progress)
+    model.load_state_dict(state_dict)
+    model.eval()
+
+    # send model to a Predictor wrapper
+    predictor = Predictor(model, config)
+
+    return predictor
+
+def all8_sslmos_wavlm_large(progress: bool = True):
+    """
+    SSL-MOS model trained with all EIGHT training sets in MOS-Bench, as of Sep 2025.
+
+    Args:
+        progress - Whether to show model checkpoint load progress
+    """
+
+    # get config
+    config_dst = os.path.join(torch.hub.get_dir(), "configs", os.path.basename(URLS["default"]["conf"]))
+    os.makedirs(os.path.join(torch.hub.get_dir(), "configs"), exist_ok=True)
+    torch.hub.download_url_to_file(URLS["default"]["conf"], dst=config_dst)
+    with open(config_dst) as f:
+        config = yaml.load(f, Loader=yaml.Loader)
+
+    # init model
+    if config["model_type"] == "SSLMOS":
+        from sheet_sqa.models.sslmos import SSLMOS
         model = SSLMOS(
             config["model_input"],
             **config["model_params"],
