@@ -22,11 +22,6 @@ URLS = {
         "conf": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-config.yml",
         "model": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-checkpoint-86000steps.pkl",
     },
-    "all8_sslmos_wavlm_large": {
-        "conf": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-config.yml",
-        "model": "https://github.com/unilight/sheet/releases/download/v0.1.0/all7-sslmos-mdf-2337-checkpoint-86000steps.pkl",
-    },
-
 }
 
 def read_wav(wav_path):
