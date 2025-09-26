@@ -4,6 +4,7 @@ theme:
   name: material
   icon:
     repo: fontawesome/brands/github
+  favicon: https://raw.githubusercontent.com/unilight/sheet/refs/heads/main/assets/sheet-favicon.png
 markdown_extensions:
   - tables
   - admonition

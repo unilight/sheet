@@ -1,11 +1,11 @@
 # SHEET / MOS-Bench
 
 <p align="center">
-  <img src="../assets/logo-sheet-only.png" alt="Prometheus-Logo" style="width: 30%; display: block; margin: auto;">
+  <img src="https://raw.githubusercontent.com/unilight/sheet/refs/heads/main/assets/logo-sheet-only.png" alt="SHEET logo" style="width: 30%; display: block; margin: auto;">
 </p>
 
-<b>MOS-Bench</b> is a benchmark designed to benchmark the generalization abilities of subjective speech quality assessment (SSQA) models.<br>
-<b>SHEET</b> stands for the <b>S</b>peech <b>H</b>uman <b>E</b>valuation <b>E</b>stimation <b>T</b>oolkit. SHEET was designed to conduct research experiments with MOS-Bench.
+- <b>MOS-Bench</b> is a benchmark designed to benchmark the generalization abilities of subjective speech quality assessment (SSQA) models.<br>
+- <b>SHEET</b> stands for the <b>S</b>peech <b>H</b>uman <b>E</b>valuation <b>E</b>stimation <b>T</b>oolkit. SHEET was designed to conduct research experiments with MOS-Bench.
 
 ## Key Features
 

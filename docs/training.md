@@ -98,6 +98,7 @@ The following command runs **parametric inference**.
 ```
 
 Inference is done within this stage. The results will be saved in `exp/<expdir>/results/<checkpoint_name>/<test_set_name>/`. For instance, `exp/ssl-mos-wav2vec2-1337/results/checkpoint-best/bvcc_test`. Inside you can find the following files:
+
 - `inference.log`: log file of the inference script, along with the calculated metrics.
 - `distribution.png`: distribution over the score range (1-5).
 - `utt_scatter_plot.png`: utterance-wise scatter plot of the ground truth and the predicted scores.
@@ -155,7 +156,7 @@ Then, run inference based on the mode:
 
 ## Download pre-trained SSQA models to reproduce the paper results
 
-We provide pre-trained model checkpoints to reproduce the results in our paper. They are hosted on <a href="https://huggingface.co/unilight/sheet-models"><img src="https://img.shields.io/badge/HuggingFace%20Models-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 15%"></a>, and you can see all the supported models in the model repo.
+We provide pre-trained model checkpoints to reproduce the results in our paper. They are hosted on [HuggingFace Models](https://huggingface.co/unilight/sheet-models), and you can see all the supported models in the model repo.
 
 The pre-trained models can be downloaded by executing stage 1 in each recipe.
 
