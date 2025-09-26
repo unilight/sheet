@@ -5,13 +5,14 @@
 
 """torch.hub configuration."""
 
-dependencies = ["torch", "torchaudio", "sheet"]
+dependencies = ["pyyaml", "torch", "torchaudio", "sheet", "huggingface_hub"]
 
 import os
 import torch
 import torch.nn.functional as F
 import torchaudio
 import yaml
+from huggingface_hub import hf_hub_download
 
 FS = 16000
 resamplers = {}
