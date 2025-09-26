@@ -5,7 +5,7 @@
 
 """torch.hub configuration."""
 
-dependencies = ["pyyaml", "torch", "torchaudio", "sheet", "huggingface_hub"]
+dependencies = ["yaml", "torch", "torchaudio", "sheet", "huggingface_hub"]
 
 import os
 import torch
