@@ -166,8 +166,6 @@ def all8_sslmos_wavlm_large(progress: bool = True, cpu=True):
     checkpoint_dst = os.path.join(torch.hub.get_dir(), "bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos/sslmos-wavlm_large/1337/checkpoint-best.bin")
 
     # load model
-    # state_dict = torch.hub.load(local_model_dir, )
-    # state_dict = torch.hub.load_state_dict_from_url(url=URLS["default"]["model"], map_location="cpu", progress=progress)
     model.load_state_dict(torch.load(checkpoint_dst, weights_only=True, map_location=map_location))
     model.eval()
 

@@ -171,6 +171,7 @@ def main():
     # set placeholders
     eval_results = defaultdict(list)
     eval_sys_results = defaultdict(lambda: defaultdict(list))
+    logvars = []
 
     # stacking model inference
     if args.use_stacking:
@@ -319,7 +320,12 @@ def main():
 
                 # store results
                 answer = outputs["scores"].cpu().detach().numpy()[0]
-                dataset.fill_answer(batch["sample_id"], answer)
+                if "logvars" in outputs:
+                    logvar = outputs["logvars"].cpu().detach().numpy()[0]
+                    logvars.append(logvar)
+                else:
+                    logvar = None
+                dataset.fill_answer(batch["sample_id"], answer, logvar)
                 pred_mean_scores = answer
                 true_mean_scores = batch["avg_score"]
                 eval_results["pred_mean_scores"].append(pred_mean_scores)
@@ -354,6 +360,8 @@ def main():
     logging.info(
         f'[UTT][ MSE = {results["utt_MSE"]:.3f} | LCC = {results["utt_LCC"]:.3f} | SRCC = {results["utt_SRCC"]:.3f} ] [SYS][ MSE = {results["sys_MSE"]:.3f} | LCC = {results["sys_LCC"]:.4f} | SRCC = {results["sys_SRCC"]:.4f} ]\n'
     )
+    if len(logvars) != 0:
+        logging.info(f'Mean log variance: {np.mean(logvars):.3f}')
 
     table = PrettyTable()
     table.set_style(MARKDOWN)

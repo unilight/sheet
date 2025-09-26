@@ -28,9 +28,11 @@ resume=""  # checkpoint path to resume training
            # (e.g. <path>/<to>/checkpoint-10000steps.pkl)
 use_domain_idx=False    # set this to true for AlignNet MDF pre-training
 # use_domain_idx=True
+pretrained_model_checkpoint=
+datastore_path=
            
 # decoding related setting
-test_sets="LIVETALK FOR P501"
+test_sets="nisqa_dev"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -195,4 +197,65 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         grep "UTT" "${outdir}/${name}/inference.log"
     done
     echo "Successfully finished inference."
+fi
+
+
+###########################################################################
+# Experimental ############################################################
+###########################################################################
+
+if [ "${stage}" -le 5 ] && [ "${stop_stage}" -ge 5 ]; then
+    echo "Stage 5: Construct datastore"
+    # shellcheck disable=SC2012
+
+    if [ -z ${tag} ]; then
+        expname="$(basename ${conf%.*})-${seed}"
+    else
+        expname="${tag}-${seed}"
+    fi
+    expdir=exp/${expname}
+
+    [ -z "${checkpoint}" ] && checkpoint="${expdir}/checkpoint-best.pkl"
+    outdir="${expdir}/datastore/$(basename "${checkpoint}" .pkl)"
+    [ ! -e "${outdir}" ] && mkdir -p "${outdir}"
+    [ "${n_gpus}" -gt 1 ] && n_gpus=1
+
+    echo "Construction start. See the progress via ${outdir}/construct_datastore.log"
+    ${cuda_cmd} --gpu "${n_gpus}" "${outdir}/construct_datastore.log" \
+        construct_datastore.py \
+            --config "${expdir}/config.yml" \
+            --csv-path "data/train.csv" \
+            --checkpoint "${checkpoint}" \
+            --out "${outdir}/datastore.h5" \
+            --verbose "${verbose}"
+    echo "Successfully finished datastore construction."
+fi
+
+if [ "${stage}" -le 6 ] && [ "${stop_stage}" -ge 6 ]; then
+    echo "Stage 6: Train fusion net of RAMP"
+
+    [ ! -e "${expdir}" ] && mkdir -p "${expdir}"
+    echo "Training start. See the progress via ${expdir}/train.log."
+
+    ln -sf "$(realpath $(ls -l ${pretrained_model_checkpoint} | awk '{print $NF}'))" ${pretrained_model_checkpoint}
+
+    pretrained_model_dir="$(dirname ${pretrained_model_checkpoint})"
+    pretrained_model_checkpoint_name=$(basename ${pretrained_model_checkpoint%.*})
+    # cp -uL "${pretrained_model_dir}/config.yml" "${expdir}/original_config.yml" # maybe we don't need config?
+    cp -uL "${pretrained_model_checkpoint}" "${expdir}/original_${pretrained_model_checkpoint_name}.pkl"
+    cp -uL "${datastore_path}" "${expdir}/datastore.h5"
+
+    ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train.log" \
+        train_ramp.py \
+            --config "${conf}" \
+            --train-csv-path "data/train.csv" \
+            --dev-csv-path "data/dev.csv" \
+            --parametric-model-checkpoint "${expdir}/original_${pretrained_model_checkpoint_name}.pkl" \
+            --datastore "${expdir}/datastore.h5" \
+            --outdir "${expdir}" \
+            --resume "${resume}" \
+            --verbose "${verbose}" \
+            --seed "${seed}"
+
+    echo "Successfully finished training."
 fi

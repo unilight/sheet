@@ -37,6 +37,12 @@ def main():
         help=("num of total samples to sub-sample. if <=0, then use whole dataset."),
     )
     parser.add_argument(
+        "--ratio",
+        type=float,
+        default=1.0,
+        help=("ratio to sub-sample. if 1.0, then use whole dataset."),
+    )
+    parser.add_argument(
         "--seed",
         default=1337,
         type=int,
@@ -59,16 +65,27 @@ def main():
     filelist, _ = read_csv(args.original_path, dict_reader=True)
     fieldnames = list(filelist[0].keys())
 
+    # subsample based on sample ids
+    original_sample_ids = list(set([line["sample_id"] for line in filelist]))
+    logging.info(f"Original unique sample size: {len(original_sample_ids)}")
+
     # randomly subsample based on num-total-samples
     if args.num_samples >= 0:
-        filelist = random.sample(filelist, args.num_samples)
+        n_samples = args.num_samples
+    # randomly subsample based on ratio
+    else:
+        if args.ratio < 1.0:
+            n_samples = int(len(original_sample_ids) * args.ratio)
+    subsampled_sample_id = set(random.sample(original_sample_ids, n_samples))
+    subsampled_filelist = [line for line in filelist if line["sample_id"] in subsampled_sample_id]
+    logging.info(f"Subsampled size: {len(subsampled_filelist)}")
 
     # write csv
     logging.info("Writing output csv file.")
     with open(args.out, "w", newline="") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        for line in filelist:
+        for line in subsampled_filelist:
             writer.writerow(line)
 
 if __name__ == "__main__":

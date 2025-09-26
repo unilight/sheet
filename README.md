@@ -31,14 +31,16 @@ We utilize `torch.hub` to provide a convenient way to load pre-trained SSQA mode
 
 > [!NOTE]
 > You don't need to install sheet following the [installation instructions](#instsallation). However, you might need to install the following:
-> - torch
-> - h5py
-> - s3prl
+> ```
+> sheet-sqa
+> huggingface_hub
+> ```
 
 ```python
 # load pre-trained model
->>> predictor = torch.hub.load("unilight/sheet:v0.1.0", "default", trust_repo=True, force_reload=True)
-# if you want to use cuda
+>>> predictor = torch.hub.load("unilight/sheet:v0.2.4post3", "all8_sslmos_wavlm_large", trust_repo=True, force_reload=True)
+# if you want to use cuda, use either of the following
+>>> predictor = torch.hub.load("unilight/sheet:v0.2.4post3", "all8_sslmos_wavlm_large", trust_repo=True, force_reload=True, cpu=False)
 >>> predictor.model.cuda()
 
 # you can either provide a path to your wav file

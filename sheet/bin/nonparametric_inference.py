@@ -7,7 +7,7 @@
 """Non-parametric inference ."""
 
 import argparse
-import h5py
+import csv
 import logging
 import os
 import pickle
@@ -15,14 +15,15 @@ import time
 from collections import defaultdict
 
 import faiss
+import h5py
 import numpy as np
-from scipy.special import softmax
 import sheet
 import sheet.datasets
 import sheet.models
 import torch
 import yaml
 from prettytable import MARKDOWN, PrettyTable
+from scipy.special import softmax
 from sheet.evaluation.metrics import calculate
 from sheet.evaluation.plot import (
     plot_sys_level_scatter,
@@ -32,6 +33,7 @@ from sheet.evaluation.plot import (
 from sheet.nonparametric.datastore import Datastore
 from sheet.utils.model_io import model_average
 from sheet.utils.types import str2bool
+from sheet.utils import write_csv
 from tqdm import tqdm
 
 
@@ -157,9 +159,6 @@ def main():
     )
     logging.info(f"Number of inference samples = {len(dataset)}.")
 
-    # get datastore
-    
-
     # setup device
     if torch.cuda.is_available():
         device = torch.device("cuda")
@@ -168,8 +167,13 @@ def main():
 
     # get model
     model_class = getattr(sheet.models, config["model_type"])
-    if config["model_type"] == "RAMPSimple":
-        datastore = Datastore(args.datastore, config["model_params"]["parametric_model_params"]["ssl_model_output_dim"], device=device)
+    is_ramp = ("RAMP" in config["model_type"])
+    if is_ramp:
+        datastore = Datastore(
+            args.datastore,
+            config["model_params"]["parametric_model_params"]["ssl_model_output_dim"],
+            device=device,
+        )
         model = model_class(
             config["model_input"],
             num_listeners=config.get("num_listeners", None),
@@ -178,7 +182,11 @@ def main():
             **config["model_params"],
         )
     else:
-        datastore = Datastore(args.datastore, config["model_params"]["ssl_model_output_dim"], device=device)
+        datastore = Datastore(
+            args.datastore,
+            config["model_params"]["ssl_model_output_dim"],
+            device=device,
+        )
         model = model_class(
             config["model_input"],
             num_listeners=config.get("num_listeners", None),
@@ -190,15 +198,14 @@ def main():
     eval_results = defaultdict(list)
     eval_sys_results = defaultdict(lambda: defaultdict(list))
     retrieval_results = {}
+    ramp_results = []
 
     # load parameter
-    if os.path.islink:
+    if os.path.islink(args.checkpoint):
         checkpoint_path = os.readlink(args.checkpoint)
     else:
         checkpoint_path = os.path.realpath(args.checkpoint)
-    model.load_state_dict(
-        torch.load(checkpoint_path, map_location="cpu")["model"]
-    )
+    model.load_state_dict(torch.load(checkpoint_path, map_location="cpu")["model"])
     logging.info(f"Loaded model parameters from {args.checkpoint}.")
     model = model.eval().to(device)
 
@@ -215,16 +222,28 @@ def main():
             }
             if "domain_idx" in batch:
                 inputs["domain_idxs"] = (
-                    torch.tensor(batch["domain_idx"], dtype=torch.long).unsqueeze(0).to(device)
+                    torch.tensor(batch["domain_idx"], dtype=torch.long)
+                    .unsqueeze(0)
+                    .to(device)
                 )
 
             # nonparametric part
             if config["np_inference_mode"] == "naive_knn":
-                ssl_embed = torch.mean(model.get_ssl_embeddings(inputs), dim=1).detach().cpu().numpy()
+                ssl_embed = (
+                    torch.mean(model.get_ssl_embeddings(inputs), dim=1)
+                    .detach()
+                    .cpu()
+                    .numpy()
+                )
                 outputs = datastore.knn(ssl_embed, args.k)["final_score"]
             elif config["np_inference_mode"] == "domain_id_knn_1":
                 # retreive domain ID
-                ssl_embed = torch.mean(model.get_ssl_embeddings(inputs), dim=1).detach().cpu().numpy()
+                ssl_embed = (
+                    torch.mean(model.get_ssl_embeddings(inputs), dim=1)
+                    .detach()
+                    .cpu()
+                    .numpy()
+                )
                 retrieved_id = int(datastore.knn(ssl_embed, 1)["ids"][0][0][0])
                 inputs["domain_idxs"] = (
                     torch.tensor(retrieved_id, dtype=torch.long).unsqueeze(0).to(device)
@@ -241,7 +260,17 @@ def main():
 
                 outputs = outputs["scores"].cpu().detach().numpy()[0]
             elif config["np_inference_mode"] == "fusion":
-                outputs = model.inference(inputs, config["np_inference_mode"])["scores"].cpu().detach().numpy()[0]
+                model_outputs = model.inference(inputs, config["np_inference_mode"])
+                outputs = (
+                    model_outputs["scores"]
+                    .cpu()
+                    .detach()
+                    .numpy()[0]
+                )
+                ramp_results.append(
+                    {"sample_id": batch["sample_id"]} | 
+                    {k: v.cpu().detach().numpy()[0] for k, v in model_outputs.items() if not k == "scores"}
+                )
             else:
                 raise NotImplementedError
 
@@ -345,8 +374,16 @@ def main():
         results["sys_KTAU"],
     )
 
-    # write results
+    # get results
     results = dataset.return_results()
+    
+    # insert retrieval results
+    for i in range(len(results)):
+        sample_id = results[i]["sample_id"]
+        for k, v in retrieval_results[sample_id].items():
+            results[i][k] = v
+    
+    # write results
     results_path = os.path.join(args.outdir, "results.csv")
     fieldnames = list(results[0].keys())
     with open(results_path, "w", newline="") as csvfile:
@@ -354,6 +391,10 @@ def main():
         writer.writeheader()
         for line in results:
             writer.writerow(line)
+
+    # write RAMP results if model is RAMP
+    if config["np_inference_mode"] == "fusion":
+        write_csv(ramp_results, os.path.join(args.outdir, "ramp_results.csv"))
 
 if __name__ == "__main__":
     main()

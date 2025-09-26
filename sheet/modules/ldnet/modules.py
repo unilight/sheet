@@ -66,6 +66,55 @@ class Projection(nn.Module):
                 return output
 
 
+class ProjectionWithUncertainty(nn.Module):
+    def __init__(
+        self,
+        in_dim,
+        hidden_dim,
+        activation,
+        output_type,
+        _output_dim,
+        output_step=1.0,
+        range_clipping=False,
+    ):
+        super(ProjectionWithUncertainty, self).__init__()
+        self.output_type = output_type
+        self.range_clipping = range_clipping
+        if output_type == "scalar":
+            output_dim = 2
+            if range_clipping:
+                self.proj = nn.Tanh()
+        elif output_type == "categorical":
+            output_dim = _output_dim
+            self.output_step = output_step
+        else:
+            raise NotImplementedError("wrong output_type: {}".format(output_type))
+
+        self.net = nn.Sequential(
+            nn.Linear(in_dim, hidden_dim),
+            activation(),
+            nn.Dropout(0.3),
+            nn.Linear(hidden_dim, output_dim),
+        )
+
+    def forward(self, x, inference=False):
+        output = self.net(x) # output shape: [B, T, d]
+
+        # scalar / categorical
+        if self.output_type == "scalar":
+            mean, logvar = output[:, :, 0], output[:, :, 1]
+            # range clipping
+            if self.range_clipping:
+                return self.proj(mean) * 2.0 + 3, logvar
+            else:
+                return mean, logvar
+        else:
+            if inference:
+                return torch.argmax(output, dim=-1) * self.output_step + 1
+            else:
+                return output
+
+
 class MobileNetV3ConvBlocks(nn.Module):
     def __init__(self, bneck_confs, output_dim):
         super(MobileNetV3ConvBlocks, self).__init__()

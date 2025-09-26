@@ -7,7 +7,7 @@
 
 import torch
 import torch.nn as nn
-from sheet.modules.ldnet.modules import Projection
+from sheet.modules.ldnet.modules import Projection, ProjectionWithUncertainty
 
 
 class AlignNet(torch.nn.Module):
@@ -40,6 +40,8 @@ class AlignNet(torch.nn.Module):
         super().__init__()  # this is needed! or else there will be an error.
         self.use_mean_listener = use_mean_listener
         self.output_type = output_type
+        self.decoder_dnn_dim = decoder_dnn_dim
+        self.range_clipping = range_clipping
 
         # define ssl model
         if ssl_module == "s3prl":
@@ -80,9 +82,9 @@ class AlignNet(torch.nn.Module):
                 batch_first=True,
                 bidirectional=True,
             )
-            decoder_dnn_input_dim = decoder_rnn_dim * 2
+            self.decoder_dnn_input_dim = decoder_rnn_dim * 2
         else:
-            decoder_dnn_input_dim = decoder_input_dim
+            self.decoder_dnn_input_dim = decoder_input_dim
 
         # define activation
         if decoder_activation == "ReLU":
@@ -92,11 +94,11 @@ class AlignNet(torch.nn.Module):
 
         # there is always decoder dnn
         self.decoder_dnn = Projection(
-            decoder_dnn_input_dim,
-            decoder_dnn_dim,
+            self.decoder_dnn_input_dim,
+            self.decoder_dnn_dim,
             self.decoder_activation,
-            output_type,
-            range_clipping,
+            self.output_type,
+            self.range_clipping,
         )
 
     def get_num_params(self):
@@ -251,3 +253,148 @@ class AlignNet(torch.nn.Module):
         )
         encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
         return encoder_outputs
+
+
+class AlignNet_U(AlignNet):
+    def __init__(self, model_input, *args, **kwargs):
+        super().__init__(model_input, *args, **kwargs)
+
+        self.decoder_dnn = ProjectionWithUncertainty(
+            self.decoder_dnn_input_dim,
+            self.decoder_dnn_dim,
+            self.decoder_activation,
+            self.output_type,
+            5  # fix this if one day we want to use categorical output
+        )
+
+    def forward(self, inputs):
+        """Calculate forward propagation.
+        Args:
+            inputs: dict, which has the following keys:
+                - waveform has shape (batch, time)
+                - waveform_lengths has shape (batch)
+                - listener_ids has shape (batch)
+                - domain_ids has shape (batch)
+        """
+        waveform, waveform_lengths = inputs["waveform"], inputs["waveform_lengths"]
+
+        # ssl model forward
+        ssl_model_outputs, ssl_model_output_lengths = self.ssl_model_forward(
+            waveform, waveform_lengths
+        )
+        to_concat = [ssl_model_outputs]
+        time = ssl_model_outputs.size(1)
+
+        # get listener embedding
+        if self.use_listener_modeling:
+            listener_ids = inputs["listener_idxs"]
+            listener_embs = self.listener_embeddings(listener_ids)  # (batch, emb_dim)
+            listener_embs = torch.stack(
+                [listener_embs for i in range(time)], dim=1
+            )  # (batch, time, feat_dim)
+
+            # NOTE(unilight): is this needed?
+            # encoder_outputs = encoder_outputs.view(
+            # (batch, time, -1)
+            # )  # (batch, time, feat_dim)
+            to_concat.append(listener_embs)
+
+        # get domain embedding
+        if self.use_domain_modeling:
+            domain_ids = inputs["domain_idxs"]
+            domain_embs = self.domain_embeddings(domain_ids)  # (batch, emb_dim)
+            domain_embs = torch.stack(
+                [domain_embs for i in range(time)], dim=1
+            )  # (batch, time, feat_dim)
+
+            # NOTE(unilight): is this needed?
+            # encoder_outputs = encoder_outputs.view(
+            # (batch, time, -1)
+            # )  # (batch, time, feat_dim)
+            to_concat.append(domain_embs)
+
+        decoder_inputs = torch.cat(to_concat, dim=2)
+
+        # decoder rnn
+        if self.use_decoder_rnn:
+            decoder_inputs, (h, c) = self.decoder_rnn(decoder_inputs)
+
+        # decoder dnn
+        decoder_outputs_mean, decoder_outputs_logvar = self.decoder_dnn(
+            decoder_inputs
+        )  # [batch, time, 1 (scalar) / 5 (categorical)]
+
+        # set outputs
+        # return lengths for masked loss calculation
+        ret = {
+            "waveform_lengths": waveform_lengths,
+            "frame_lengths": ssl_model_output_lengths,
+        }
+        if self.use_listener_modeling:
+            ret["ld_scores"] = decoder_outputs
+        else:
+            ret["mean_scores"] = decoder_outputs_mean
+            ret["mean_scores_logvar"] = decoder_outputs_logvar
+
+        return ret
+
+    def mean_listener_inference(self, inputs):
+        waveform, waveform_lengths = inputs["waveform"], inputs["waveform_lengths"]
+        batch = waveform.size(0)
+
+        # ssl model forward
+        ssl_model_outputs, ssl_model_output_lengths = self.ssl_model_forward(
+            waveform, waveform_lengths
+        )
+        to_concat = [ssl_model_outputs]
+        time = ssl_model_outputs.size(1)
+
+        # get listener embedding
+        if self.use_listener_modeling:
+            device = waveform.device
+            listener_ids = (
+                torch.ones(batch, dtype=torch.long) * self.num_listeners - 1
+            ).to(
+                device
+            )  # (bs)
+            listener_embs = self.listener_embeddings(listener_ids)  # (batch, emb_dim)
+            listener_embs = torch.stack(
+                [listener_embs for i in range(time)], dim=1
+            )  # (batch, time, feat_dim)
+
+            # NOTE(unilight): is this needed?
+            # encoder_outputs = encoder_outputs.view(
+            # (batch, time, -1)
+            # )  # (batch, time, feat_dim)
+            to_concat.append(listener_embs)
+
+        # get domain embedding
+        if self.use_domain_modeling:
+            device = waveform.device
+            assert "domain_idxs" in inputs, "Must specify domain ID even in inference."
+            domain_ids = inputs["domain_idxs"]
+            domain_embs = self.domain_embeddings(domain_ids)  # (batch, emb_dim)
+            domain_embs = torch.stack(
+                [domain_embs for i in range(time)], dim=1
+            )  # (batch, time, feat_dim)
+
+            # NOTE(unilight): is this needed?
+            # encoder_outputs = encoder_outputs.view(
+            # (batch, time, -1)
+            # )  # (batch, time, feat_dim)
+            to_concat.append(domain_embs)
+
+        decoder_inputs = torch.cat(to_concat, dim=2)
+
+        # decoder rnn
+        if self.use_decoder_rnn:
+            decoder_inputs, (h, c) = self.decoder_rnn(decoder_inputs)
+
+        # decoder dnn
+        decoder_outputs_mean, decoder_outputs_logvar = self.decoder_dnn(
+            decoder_inputs
+        )  # [batch, time, 1 (scalar) / 5 (categorical)]
+
+        scores = torch.mean(decoder_outputs_mean.squeeze(-1), dim=1)
+        logvars = torch.mean(decoder_outputs_logvar.squeeze(-1), dim=1)
+        return {"scores": scores, "logvars": logvars}
