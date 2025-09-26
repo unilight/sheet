@@ -140,13 +140,12 @@ def all8_sslmos_wavlm_large(progress: bool = True, cpu=True):
         map_location = "cuda"
 
     # get config
-    os.makedirs(os.path.join(torch.hub.get_dir(), "configs"), exist_ok=True)
     hf_hub_download(
         repo_id="unilight/sheet-models",
         filename="bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos/sslmos-wavlm_large/1337/config.yml",
-        local_dir=os.path.join(torch.hub.get_dir(), "configs")
+        local_dir=torch.hub.get_dir()
     )
-    config_dst = os.path.join(torch.hub.get_dir(), "configs", "config.yml")
+    config_dst = os.path.join(torch.hub.get_dir(), "bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos/sslmos-wavlm_large/1337/config.yml")
     with open(config_dst) as f:
         config = yaml.load(f, Loader=yaml.Loader)
 
@@ -159,18 +158,17 @@ def all8_sslmos_wavlm_large(progress: bool = True, cpu=True):
         )
 
     # download model
-    local_model_dir = os.path.join(torch.hub.get_dir(), "models")
-    os.makedirs(local_model_dir, exist_ok=True)
     hf_hub_download(
         repo_id="unilight/sheet-models",
         filename="bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos/sslmos-wavlm_large/1337/checkpoint-best.bin",
-        local_dir=local_model_dir
+        local_dir=torch.hub.get_dir()
     )
+    checkpoint_dst = os.path.join(torch.hub.get_dir(), "bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos/sslmos-wavlm_large/1337/checkpoint-best.bin")
 
     # load model
     # state_dict = torch.hub.load(local_model_dir, )
     # state_dict = torch.hub.load_state_dict_from_url(url=URLS["default"]["model"], map_location="cpu", progress=progress)
-    model.load_state_dict(torch.load(os.path.join(local_model_dir, "checkpoint-best.bin"), weights_only=True, map_location=map_location))
+    model.load_state_dict(torch.load(checkpoint_dst, weights_only=True, map_location=map_location))
     model.eval()
 
     # send model to a Predictor wrapper
