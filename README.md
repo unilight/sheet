@@ -29,11 +29,11 @@ There are three usages of SHEET:
 
 We utilize `torch.hub` to provide a convenient way to load pre-trained SSQA models and predict scores of wav files or torch tensors.
 
-[!NOTE]
-You don't need to install sheet following the [installation instructions](#instsallation). However, you might need to install the following:
-- torch
-- h5py
-- s3prl
+> [!NOTE]
+> You don't need to install sheet following the [installation instructions](#instsallation). However, you might need to install the following:
+> - torch
+> - h5py
+> - s3prl
 
 ```python
 # load pre-trained model
@@ -64,9 +64,6 @@ git clone https://github.com/unilight/sheet.git
 cd sheet/tools
 make
 ```
-
-
-
 
 ## Information
 
