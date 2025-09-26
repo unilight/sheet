@@ -15,7 +15,7 @@
         <link rel="next" href="../benchmarking/">
       
       
-      <link rel="icon" href="../assets/images/favicon.png">
+      <link rel="icon" href="https://raw.githubusercontent.com/unilight/sheet/refs/heads/main/assets/sheet-favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.20">
     
     
@@ -698,11 +698,13 @@
 <div class="highlight"><pre><span></span><code>./utils/BENCHMARKS/run_bvcc_test.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">1</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">1</span><span class="w"> </span><span class="se">\\</span>
 <span class="w">    </span>--conf<span class="w"> </span>&lt;conf/config.yml&gt;<span class="w"> </span>--checkpoint<span class="w"> </span>&lt;checkpoint<span class="w"> </span>file&gt;<span class="w"> </span>--tag<span class="w"> </span>&lt;tag&gt;<span class="w"> </span><span class="c1"># these are optionals</span>
 </code></pre></div>
-<p>Inference is done within this stage. The results will be saved in <code>exp/&lt;expdir&gt;/results/&lt;checkpoint_name&gt;/&lt;test_set_name&gt;/</code>. For instance, <code>exp/ssl-mos-wav2vec2-1337/results/checkpoint-best/bvcc_test</code>. Inside you can find the following files:
-- <code>inference.log</code>: log file of the inference script, along with the calculated metrics.
-- <code>distribution.png</code>: distribution over the score range (1-5).
-- <code>utt_scatter_plot.png</code>: utterance-wise scatter plot of the ground truth and the predicted scores.
-- <code>sys_scatter_plot.png</code>: system-wise scatter plot of the ground truth and the predicted scores.</p>
+<p>Inference is done within this stage. The results will be saved in <code>exp/&lt;expdir&gt;/results/&lt;checkpoint_name&gt;/&lt;test_set_name&gt;/</code>. For instance, <code>exp/ssl-mos-wav2vec2-1337/results/checkpoint-best/bvcc_test</code>. Inside you can find the following files:</p>
+<ul>
+<li><code>inference.log</code>: log file of the inference script, along with the calculated metrics.</li>
+<li><code>distribution.png</code>: distribution over the score range (1-5).</li>
+<li><code>utt_scatter_plot.png</code>: utterance-wise scatter plot of the ground truth and the predicted scores.</li>
+<li><code>sys_scatter_plot.png</code>: system-wise scatter plot of the ground truth and the predicted scores.</li>
+</ul>
 <p>By default, the <code>checkpoint-best.pkl</code> is used, which is a symbolic link that points to the best performing model checkpoint (depending on the <code>best_model_criterion</code> field in the config file.) You can specify a different checkpoint file with <code>--checkpoint</code>.</p>
 <h5 id="non-parametric-inference">Non-parametric inference</h5>
 <p>You can also run <strong>non-parametric inference</strong> for certain models. However, not all recipes and models support it.
@@ -736,7 +738,7 @@
 <span class="w">  </span>--conf<span class="w"> </span>conf/ssl-mos-wav2vec2<span class="w"> </span>--checkpoint<span class="w"> </span>&lt;checkpoint&gt;<span class="w"> </span>--tag<span class="w"> </span>&lt;tag&gt;<span class="w"> </span>--seed<span class="w"> </span>&lt;seed&gt;<span class="w">  </span><span class="c1"># these are optionals</span>
 </code></pre></div>
 <h2 id="download-pre-trained-ssqa-models-to-reproduce-the-paper-results">Download pre-trained SSQA models to reproduce the paper results</h2>
-<p>We provide pre-trained model checkpoints to reproduce the results in our paper. They are hosted on <a href="https://huggingface.co/unilight/sheet-models"><img src="https://img.shields.io/badge/HuggingFace%20Models-FFD21E?logo=huggingface&logoColor=000" alt="Prometheus-Logo" style="width: 15%"></a>, and you can see all the supported models in the model repo.</p>
+<p>We provide pre-trained model checkpoints to reproduce the results in our paper. They are hosted on <a href="https://huggingface.co/unilight/sheet-models">HuggingFace Models</a>, and you can see all the supported models in the model repo.</p>
 <p>The pre-trained models can be downloaded by executing stage 1 in each recipe.</p>
 <div class="highlight"><pre><span></span><code>./run.sh<span class="w"> </span>--stage<span class="w"> </span><span class="m">1</span><span class="w"> </span>--stop_stage<span class="w"> </span><span class="m">1</span>
 </code></pre></div>
