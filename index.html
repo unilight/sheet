@@ -507,6 +507,28 @@
   
 
     
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="pretrained-models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    List of pre-trained models
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
   </ul>
 </nav>
                   </div>
@@ -737,6 +759,7 @@
 <h2 id="mos-bench">MOS-Bench</h2>
 <p>As of September 2025, MOS-Bench has 8 training sets and 17 test sets. See the <a href="mos-bench/">MOS-Bench page</a> for more.</p>
 <h2 id="instsallation">Instsallation</h2>
+<p>Full installation is needed if your goal is to do <strong>training</strong>.</p>
 <h3 id="editable-installation-with-virtualenv">Editable installation with virtualenv</h3>
 <p>You don't need to prepare an environment (using conda, etc.) first. The following commands will automatically construct a virtual environment in <code>tools/</code>. When you run the recipes, the scripts will automatically activate the virtual environment.</p>
 <div class="highlight"><pre><span></span><code>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/unilight/sheet.git
@@ -745,19 +768,25 @@ make
 </code></pre></div>
 <h2 id="usage">Usage</h2>
 <h3 id="i-just-want-to-use-your-trained-mos-predictor">I just want to use your trained MOS predictor!</h3>
-<p>We utilize <code>torch.hub</code> to provide a convenient way to load pre-trained SSQA models and predict scores of wav files or torch tensors. </p>
+<p>We utilize <code>torch.hub</code> to provide a convenient way to load pre-trained SSQA models and predict scores of wav files or torch tensors.</p>
+<p>You can use the <code>_id</code> argument to specify which pre-trained model to use. If not specified, the default model is used. See the <a href="pretrained-models/">list of pre-trained models</a> page for the complete table.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>You don't need to install sheet following the <a href="#instsallation">installation instructions</a>. However, you might need to install the following:</p>
-<ul>
-<li>torch</li>
-<li>h5py</li>
-<li>s3prl</li>
-</ul>
+<p>Since SHEET is a on-going project, if you use our pre-trained model in you paper, it is suggested to specify the version. For instance: <code>SHEET SSL-MOS v0.1.0</code>, <code>SHEET SSL-MOS v0.2.5</code>, etc.</p>
 </div>
-<div class="highlight"><pre><span></span><code><span class="c1"># load pre-trained model</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="n">predictor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;unilight/sheet:v0.1.0&quot;</span><span class="p">,</span> <span class="s2">&quot;default&quot;</span><span class="p">,</span> <span class="n">trust_repo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reload</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="c1"># if you want to use cuda</span>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You don't need to install sheet following the <a href="#instsallation">installation instructions</a>. However, you might need to install the following:
+<div class="highlight"><pre><span></span><code>sheet-sqa
+huggingface_hub
+</code></pre></div></p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># load default pre-trained model</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">predictor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;unilight/sheet:v0.2.4post3&quot;</span><span class="p">,</span> <span class="s2">&quot;sheet_ssqa&quot;</span><span class="p">,</span> <span class="n">trust_repo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reload</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="c1"># use `_id` to specify which pre-trained model to use</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">predictor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;unilight/sheet:v0.2.4post3&quot;</span><span class="p">,</span> <span class="s2">&quot;sheet_ssqa&quot;</span><span class="p">,</span> <span class="n">trust_repo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reload</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_id</span><span class="o">=</span><span class="s2">&quot;bvcc/sslmos-wavlm_large/1337&quot;</span><span class="p">)</span>
+<span class="c1"># if you want to use cuda, use either of the following</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">predictor</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;unilight/sheet:v0.2.4post3&quot;</span><span class="p">,</span> <span class="s2">&quot;sheet_ssqa&quot;</span><span class="p">,</span> <span class="n">trust_repo</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">force_reload</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cpu</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">predictor</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
 
 <span class="c1"># you can either provide a path to your wav file</span>
