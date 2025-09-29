@@ -8,6 +8,8 @@
       
       
       
+        <link rel="canonical" href="https://unilight.github.io/sheet/benchmarking/">
+      
       
         <link rel="prev" href="../training/">
       
@@ -48,6 +50,32 @@
       
 
     
+    
+      
+        <meta  property="og:type"  content="website" >
+      
+        <meta  property="og:title"  content="Benchmarking guide - SHEET / MOS-Bench" >
+      
+        <meta  property="og:description"  content="None" >
+      
+        <meta  property="og:image"  content="https://unilight.github.io/sheet/assets/images/social/benchmarking.png" >
+      
+        <meta  property="og:image:type"  content="image/png" >
+      
+        <meta  property="og:image:width"  content="1200" >
+      
+        <meta  property="og:image:height"  content="630" >
+      
+        <meta  property="og:url"  content="https://unilight.github.io/sheet/benchmarking/" >
+      
+        <meta  name="twitter:card"  content="summary_large_image" >
+      
+        <meta  name="twitter:title"  content="Benchmarking guide - SHEET / MOS-Bench" >
+      
+        <meta  name="twitter:description"  content="None" >
+      
+        <meta  name="twitter:image"  content="https://unilight.github.io/sheet/assets/images/social/benchmarking.png" >
+      
     
     
   </head>
@@ -469,7 +497,7 @@ The design is that <strong>you don't need to run the installation, which can be 
 <li><code>avg_score</code>: The ground truth MOS of the sample.</li>
 </ul>
 <h2 id="metric-calculation">Metric calculation</h2>
-<p>You may then use your MOS predictor to run inference over the samples in the test set csv files. We suggest you to overwrite (or resave) the csv file by adding a <code>answer</code> column. Then, you can use the following command to calculate the metrics. Here we provide an example results csv file in <a href="../assets/example_results.csv">assets/example_results.csv</a>, which is based on BVCC test.</p>
+<p>You may then use your MOS predictor to run inference over the samples in the test set csv files. We suggest you to overwrite (or resave) the csv file by adding a <code>answer</code> column. Then, you can use the following command to calculate the metrics. Here we provide an example results csv file in [assets/example_results.csvhttps://github.com/unilight/sheet/blob/main/assets/example_results.csv), which is based on BVCC test.</p>
 <div class="highlight"><pre><span></span><code><span class="n">python</span> <span class="n">utils</span><span class="o">/</span><span class="n">calculate_metrics</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">csv</span> <span class="n">assets</span><span class="o">/</span><span class="n">example_results</span><span class="o">.</span><span class="n">csv</span>
 </code></pre></div>
 <p>The result will be:</p>
@@ -481,6 +509,9 @@ The design is that <strong>you don't need to run the installation, which can be 
 
 
 
+
+  
+  
 
 
 

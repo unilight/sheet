@@ -8,6 +8,8 @@
       
       
       
+        <link rel="canonical" href="https://unilight.github.io/sheet/training/">
+      
       
         <link rel="prev" href="../mos-bench/">
       
@@ -48,6 +50,32 @@
       
 
     
+    
+      
+        <meta  property="og:type"  content="website" >
+      
+        <meta  property="og:title"  content="Training guide - SHEET / MOS-Bench" >
+      
+        <meta  property="og:description"  content="None" >
+      
+        <meta  property="og:image"  content="https://unilight.github.io/sheet/assets/images/social/training.png" >
+      
+        <meta  property="og:image:type"  content="image/png" >
+      
+        <meta  property="og:image:width"  content="1200" >
+      
+        <meta  property="og:image:height"  content="630" >
+      
+        <meta  property="og:url"  content="https://unilight.github.io/sheet/training/" >
+      
+        <meta  name="twitter:card"  content="summary_large_image" >
+      
+        <meta  name="twitter:title"  content="Training guide - SHEET / MOS-Bench" >
+      
+        <meta  name="twitter:description"  content="None" >
+      
+        <meta  name="twitter:image"  content="https://unilight.github.io/sheet/assets/images/social/training.png" >
+      
     
     
   </head>
@@ -663,9 +691,10 @@
 <h2 id="conduct-complete-experiments-training-benchmarking">Conduct complete experiments (training &amp; benchmarking)</h2>
 <p>You can train your own speech quality predictor using the datasets in MOS-Bench. Each The starting point of each recipe is the <code>run.sh</code> file.</p>
 <p>There are two ways you can train models:
-- Train models using a single dataset at a time. This is called "<strong>single dataset training</strong>". You can refer to the <a href="#training-datasets-in-mos-bench">Training datasets in MOS-Bench</a> section for available datasets.
+- Train models using a single dataset at a time. This is called "<strong>single dataset training</strong>". You can refer to the <a href="../mos-bench/">Training set</a> section for available datasets.
 - Train models by pooling multiple datasets. This is called "<strong>multiple dataset training</strong>". Currently we support the following recipe:
-    - Recipe: <code>egs/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi</code></p>
+    - <code>egs/bvcc+nisqa+pstn+singmos+somos+tencent+tmhint-qi</code>
+    - <code>egs/bvcc+somos+singmos+nisqa+tmhint-qi+tencent+pstn+urgent2024-mos</code></p>
 <p>After you train your models, you can run benchmarking on the test sets in MOS-Bench.</p>
 <p>Below, we explain the processes of <a href="#structure-of-each-training-recipe-runsh">training</a> and <a href="#structure-of-each-benchmark-recipe-benchmarksrun_xxx_testsh">benchmarking</a>.</p>
 <h3 id="structure-of-each-training-recipe-runsh">Structure of each training recipe (<code>run.sh</code>)</h3>
@@ -771,6 +800,9 @@
 
 
 
+
+  
+  
 
 
 
