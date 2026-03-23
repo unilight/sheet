@@ -11,6 +11,7 @@ import math
 import torch
 import torch.nn as nn
 from sheet.modules.ldnet.modules import Projection, ProjectionWithUncertainty
+from sheet.modules.asp import AttentiveStatisticsPooling
 
 
 class SSLMOS(torch.nn.Module):
@@ -45,6 +46,8 @@ class SSLMOS(torch.nn.Module):
         categorical_head_output_dim: int = 17,
         categorical_head_output_step: float = 0.25,
         categorical_head_range_clipping: bool = True,
+        # aggregation
+        use_asp: bool = False,
         # dummy, for signature need
         num_domains: int = None,
     ):
@@ -114,6 +117,11 @@ class SSLMOS(torch.nn.Module):
                 output_type,
                 range_clipping,
             )
+
+        # use asp
+        self.use_asp = use_asp
+        if use_asp:
+            self.asp = AttentiveStatisticsPooling(64)
 
     def get_num_params(self):
         return sum(p.numel() for n, p in self.named_parameters())
@@ -251,6 +259,31 @@ class SSLMOS(torch.nn.Module):
         )
         encoder_outputs = all_encoder_outputs[self.ssl_model_layer_idx]
         return encoder_outputs
+    
+    @staticmethod
+    def aggregate(frames, frame_lengths):
+        """Aggregate some frame-level representation to sample-level
+
+        Args:
+            frames has shape (batch, time, 1/5)
+            frame_lengths has shape (batch)
+        
+        Return:
+            samples has shape (batch, 1/5)
+        """
+        # Create mask for valid frames
+        batch_size, max_time, _ = frames.shape
+        device = frames.device
+
+        # Create mask based on frame lengths
+        mask = torch.arange(max_time, device=device).unsqueeze(0) < frame_lengths.unsqueeze(1)
+        mask = mask.float().unsqueeze(-1)  # [batch, time, 1]
+
+        # Masked mean
+        masked_frames = frames * mask
+        samples = masked_frames.sum(dim=1) / frame_lengths.unsqueeze(-1).float()  # [batch, 1/5]
+        
+        return samples
 
 
 class SSLMOS_U(SSLMOS):

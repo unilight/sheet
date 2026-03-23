@@ -28,7 +28,7 @@ tag=""     # tag for directory to save model
 datastore_path=
            
 # decoding related setting
-test_sets="LIVETALK FOR P501"
+test_sets="FOR LIVETALK P501"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)

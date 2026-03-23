@@ -94,6 +94,7 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
         # train="python -m seq2seq_vc.distributed.launch --nproc_per_node ${n_gpus} -c parallel-wavegan-train"
     else
         train="train.py"
+        # train="train_unsupervised_pref.py"
     fi
     echo "Training start. See the progress via ${expdir}/train.log."
     ${cuda_cmd} --gpu "${n_gpus}" "${expdir}/train.log" \

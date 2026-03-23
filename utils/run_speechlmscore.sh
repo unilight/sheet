@@ -4,6 +4,12 @@
 #  MIT License (https://opensource.org/licenses/MIT)
 # modiied from https://github.com/soumimaiti/speechlmscore_tool/tree/main
 
+# Usage:
+# utils/run_speechlmscore.sh --stage 0 --pretrained_model_dir ../bvcc/downloads/ --csv_path data/nisqa_FOR.csv --outdir exp/speechlmscore/nisqa_FOR/
+
+. ./path.sh || exit 1;
+. ./cmd.sh || exit 1;
+
 # basic settings
 stage=-1       # stage to start
 stop_stage=100 # stage to stop

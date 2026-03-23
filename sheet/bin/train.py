@@ -267,7 +267,7 @@ def main():
 
     # define criterions
     criterion = {}
-    if config["mean_score_criterions"] is not None:
+    if config.get("mean_score_criterions", None) is not None:
         criterion["mean_score_criterions"] = [
             {
                 "type": criterion_dict["criterion_type"],
@@ -299,6 +299,17 @@ def main():
                 "weight": criterion_dict["criterion_weight"],
             }
             for criterion_dict in config["listener_score_criterions"]
+        ]
+    if config.get("pref_criterions", None) is not None:
+        criterion["pref_criterions"] = [
+            {
+                "type": criterion_dict["criterion_type"],
+                "criterion": getattr(sheet.losses, criterion_dict["criterion_type"])(
+                    **criterion_dict["criterion_params"]
+                ),
+                "weight": criterion_dict["criterion_weight"],
+            }
+            for criterion_dict in config["pref_criterions"]
         ]
 
     # define optimizers and schedulers

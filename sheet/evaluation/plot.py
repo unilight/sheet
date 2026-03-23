@@ -59,8 +59,9 @@ def plot_utt_level_scatter(
         edgecolors="b",
         alpha=0.20,
     )
-    plt.xlim([0.5, M])
-    plt.ylim([0.5, M])
+    plt.xlim([1.0, M])
+    plt.ylim([1.0, M])
+    plt.plot([1.0, M], [1.0, M], ls="--", c=".3")
     plt.xlabel("True MOS")
     plt.ylabel("Predicted MOS")
     plt.title(
@@ -94,8 +95,9 @@ def plot_sys_level_scatter(
         marker="o",
         edgecolors="b",
     )
-    plt.xlim([0.5, M])
-    plt.ylim([0.5, M])
+    plt.xlim([1.0, M])
+    plt.ylim([1.0, M])
+    plt.plot([1.0, M], [1.0, M], ls="--", c=".3")
     plt.xlabel("True MOS")
     plt.ylabel("Predicted MOS")
     plt.title(

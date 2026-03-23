@@ -16,7 +16,7 @@ from collections import defaultdict
 
 import numpy as np
 import sheet
-import sheet.datasets
+from sheet.datasets import NonIntrusiveDataset
 import sheet.models
 import torch
 import yaml
@@ -138,10 +138,7 @@ def main():
         logging.info(f"{key} = {value}")
 
     # get dataset
-    dataset_class = getattr(
-        sheet.datasets,
-        config.get("dataset_type", "NonIntrusiveDataset"),
-    )
+    dataset_class = NonIntrusiveDataset
     dataset = dataset_class(
         csv_path=args.csv_path,
         target_sample_rate=config["sampling_rate"],
