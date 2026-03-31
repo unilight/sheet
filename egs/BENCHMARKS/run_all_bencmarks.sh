@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# Copyright 2025 Wen-Chin Huang (Nagoya University)
+# Copyright 2026 Wen-Chin Huang (Nagoya University)
 #  MIT License (https://opensource.org/licenses/MIT)
 
 conf=
 tag=
 np_inference_mode=
-seed=
+seed=1337
 checkpoint=
 
 # shellcheck disable=SC1091
@@ -31,6 +31,7 @@ utils/BENCHMARKS/run_bc19_test.sh --conf ${conf} --seed ${seed} --checkpoint ${c
 utils/BENCHMARKS/run_bc23_test.sh --conf ${conf} --seed ${seed} --checkpoint ${checkpoint} ${_opts}
 utils/BENCHMARKS/run_svcc23_test.sh --conf ${conf} --seed ${seed} --checkpoint ${checkpoint} ${_opts}
 utils/BENCHMARKS/run_singmos_test.sh --conf ${conf} --seed ${seed} --checkpoint ${checkpoint} ${_opts}
+utils/BENCHMARKS/run_singmos_pro_test.sh --conf ${conf} --seed ${seed} --checkpoint ${checkpoint} ${_opts}
 utils/BENCHMARKS/run_brspeechmos_test.sh --conf ${conf} --seed ${seed} --checkpoint ${checkpoint} ${_opts}
 utils/BENCHMARKS/run_hablamos_test.sh --conf ${conf} --seed ${seed} --checkpoint ${checkpoint} ${_opts}
 utils/BENCHMARKS/run_ttsds2_test.sh --conf ${conf} --seed ${seed} --checkpoint ${checkpoint} ${_opts}

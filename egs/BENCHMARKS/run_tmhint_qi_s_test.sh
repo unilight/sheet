@@ -23,7 +23,8 @@ datadir="../tmhint-qi-s/data"
 target_sampling_rate=16000
 
 # training related setting
-tag=""     # tag for directory to save model
+exp_root="exp" # Default. Will be dynamically overwritten if --checkpoint is provided.
+tag=""         # tag for directory to save model
 
 datastore_path=
 
@@ -42,15 +43,29 @@ np_inference_mode=""
 
 set -euo pipefail
 
-if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
+# Infer expdir and exp_root based on the checkpoint, or build it from conf/tag
+if [ -n "${checkpoint}" ]; then
+    expdir="$(dirname "${checkpoint}")"
+    exp_root="$(dirname "${expdir}")"
+else
+    if [ -z "${tag}" ]; then
+        expname="$(basename "${conf%.*}")-${seed}"
+    else
+        expname="${tag}-${seed}"
+    fi
+    expdir="${exp_root}/${expname}"
+    checkpoint="${expdir}/checkpoint-best.pkl"
+fi
+
+if [ "${stage}" -le -1 ] && [ "${stop_stage}" -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
 
-    ../tmhint-qi-s/local/data_download.sh ${tmhintqis_db_root}
+    ../tmhint-qi-s/local/data_download.sh "${tmhintqis_db_root}"
 fi
 
 
 mkdir -p "${datadir}"
-if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
+if [ "${stage}" -le 0 ] && [ "${stop_stage}" -ge 0 ]; then
     echo "stage 0: Data preparation"
 
     ../tmhint-qi-s/local/data_prep.py \
@@ -63,14 +78,6 @@ fi
 
 if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     echo "Stage 1: Inference"
-    # shellcheck disable=SC2012
-
-    if [ -z ${tag} ]; then
-        expname="$(basename ${conf%.*})-${seed}"
-    else
-        expname="${tag}-${seed}"
-    fi
-    expdir=exp/${expname}
 
     if [ "${use_stacking}" = "True" ]; then
         [ -z "${meta_model_checkpoint}" ] && meta_model_checkpoint="${expdir}/meta_model.pkl"
@@ -78,7 +85,6 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     elif [ "${model_averaging}" = "True" ]; then
         outdir="${expdir}/results/model-averaging"
     else
-        [ -z "${checkpoint}" ] && checkpoint="${expdir}/checkpoint-best.pkl"
         outdir="${expdir}/results/$(basename "${checkpoint}" .pkl)"
     fi
 
@@ -106,14 +112,6 @@ fi
 
 if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     echo "Stage 2: All domain idxs inference"
-    # shellcheck disable=SC2012
-
-    if [ -z ${tag} ]; then
-        expname="$(basename ${conf%.*})-${seed}"
-    else
-        expname="${tag}-${seed}"
-    fi
-    expdir=exp/${expname}
 
     if [ "${use_stacking}" = "True" ]; then
         [ -z "${meta_model_checkpoint}" ] && meta_model_checkpoint="${expdir}/meta_model.pkl"
@@ -121,7 +119,6 @@ if [ "${stage}" -le 2 ] && [ "${stop_stage}" -ge 2 ]; then
     elif [ "${model_averaging}" = "True" ]; then
         outdir="${expdir}/results/model-averaging"
     else
-        [ -z "${checkpoint}" ] && checkpoint="${expdir}/checkpoint-best.pkl"
         outdir="${expdir}/results/all_domain_idxs_$(basename "${checkpoint}" .pkl)"
     fi
 
@@ -149,19 +146,10 @@ fi
 
 if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     echo "Stage 3: Non-parametric inference"
-    # shellcheck disable=SC2012
 
-    if [ -z ${tag} ]; then
-        expname="$(basename ${conf%.*})-${seed}"
-    else
-        expname="${tag}-${seed}"
-    fi
-    expdir=exp/${expname}
-
-    [ -z "${checkpoint}" ] && checkpoint="${expdir}/checkpoint-best.pkl"
     outdir="${expdir}/results/np_$(basename "${checkpoint}" .pkl)/${np_inference_mode}"
 
-    if [ -z ${datastore_path} ]; then
+    if [ -z "${datastore_path}" ]; then
         datastore_path="${expdir}/datastore/$(basename "${checkpoint}" .pkl)/datastore.h5"
     fi
 

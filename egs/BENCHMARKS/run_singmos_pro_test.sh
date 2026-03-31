@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright 2024 Wen-Chin Huang (Nagoya University)
+# Copyright 2026 Wen-Chin Huang (Nagoya University)
 #  MIT License (https://opensource.org/licenses/MIT)
 
 . ./path.sh || exit 1;
@@ -17,19 +17,18 @@ conf=conf/ssl-mos-wav2vec2.yaml
 meta_model_conf=conf/stacking_ridge.yaml
 
 # dataset configuration
-somos_db_root=/data/group1/z44476r/Corpora/somos    # change this to your dataset folder
-datadir="../somos/data"
+singmos_pro_db_root=/data/group1/z44476r/Corpora/SingMOS-Pro   # change this to your dataset folder
+datadir="../singmos-pro/data"
 domain_idx=0
 target_sampling_rate=16000
 
 # training related setting
-exp_root="exp" # Default. Will be dynamically overwritten if --checkpoint is provided.
-tag=""         # tag for directory to save model
-
-datastore_path=
-
+# exp_root=exp
+exp_root=/data/group1/z44476r/Experiments/artifacts/sheet/egs/singmos-pro
+tag=""     # tag for directory to save model
+           
 # decoding related setting
-test_sets="test"
+test_sets="singmos_pro_test1 singmos_pro_test2 singmos_pro_test3"
 checkpoint=""               # checkpoint path to be used for decoding
                             # if not provided, the latest one will be used
                             # (e.g. <path>/<to>/checkpoint-400000steps.pkl)
@@ -57,28 +56,32 @@ else
     checkpoint="${expdir}/checkpoint-best.pkl"
 fi
 
-if [ "${stage}" -le -1 ] && [ "${stop_stage}" -ge -1 ]; then
+if [ ${stage} -le -1 ] && [ ${stop_stage} -ge -1 ]; then
     echo "stage -1: Data and Pretrained Model Download"
 
-    ../somos/local/data_download.sh "${somos_db_root}"
+    ../singmos-pro/local/data_download.sh ${singmos_pro_db_root}
 fi
 
 
 mkdir -p "${datadir}"
-if [ "${stage}" -le 0 ] && [ "${stop_stage}" -ge 0 ]; then
+if [ ${stage} -le 0 ] && [ ${stop_stage} -ge 0 ]; then
     echo "stage 0: Data preparation"
 
-    ../somos/local/data_prep.py \
-        --original-path "${somos_db_root}/training_files/split1/clean/VALIDSET" --wavdir "${somos_db_root}/audios" --out "${datadir}/somos_dev.csv" \
-        --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${somos_db_root}/audios_${target_sampling_rate}" --domain-idx "${domain_idx}"
-    ../somos/local/data_prep.py \
-        --original-path "${somos_db_root}/training_files/split1/clean/TESTSET" --wavdir "${somos_db_root}/audios" --out "${datadir}/somos_test.csv" \
-        --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${somos_db_root}/audios_${target_sampling_rate}" --domain-idx "${domain_idx}"
+    for setname in "test1" "test2" "test3"; do
+        local/data_prep.py \
+            --split-json "${singmos_pro_db_root}/info/split.json" \
+            --score-json "${singmos_pro_db_root}/info/score.json" \
+            --wavdir "${singmos_pro_db_root}/wav" \
+            --out "${datadir}/singmos_pro_${setname}.csv" \
+            --setname "${setname}" --seed "${seed}" \
+            --resample --target-sampling-rate "${target_sampling_rate}" --target-wavdir "${singmos_pro_db_root}/wavs_${target_sampling_rate}"
+    done
+
 fi
 
 if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     echo "Stage 1: Inference"
-
+    
     if [ "${use_stacking}" = "True" ]; then
         [ -z "${meta_model_checkpoint}" ] && meta_model_checkpoint="${expdir}/meta_model.pkl"
         outdir="${expdir}/results/stacking-model"
@@ -89,7 +92,6 @@ if [ "${stage}" -le 1 ] && [ "${stop_stage}" -ge 1 ]; then
     fi
 
     for name in ${test_sets}; do
-        name="somos_${name}"
         [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
         [ "${n_gpus}" -gt 1 ] && n_gpus=1
         echo "Inference start. See the progress via ${outdir}/${name}/inference.log."
@@ -115,7 +117,6 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
     outdir="${expdir}/results/np_$(basename "${checkpoint}" .pkl)/${np_inference_mode}"
 
     for name in ${test_sets}; do
-        name="somos_${name}"
         [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
         [ "${n_gpus}" -gt 1 ] && n_gpus=1
         echo "Inference start. See the progress via ${outdir}/${name}/inference.log."
@@ -132,22 +133,4 @@ if [ "${stage}" -le 3 ] && [ "${stop_stage}" -ge 3 ]; then
         grep "UTT" "${outdir}/${name}/inference.log"
     done
     echo "Successfully finished inference."
-fi
-
-if [ "${stage}" -le 4 ] && [ "${stop_stage}" -ge 4 ]; then
-    echo "Stage 4: SpeechLMScore inference"
-    # shellcheck disable=SC2012
-
-    outdir="${exp_root}/speechlmscore"
-    for name in ${test_sets}; do
-        name="somos_${name}"
-        [ ! -e "${outdir}/${name}" ] && mkdir -p "${outdir}/${name}"
-        utils/run_speechlmscore.sh \
-            --pretrained_model_dir "downloads" \
-            --csv-path "${datadir}/${name}.csv" \
-            --outdir "${outdir}/${name}"
-        echo "Successfully finished inference of ${name} set."
-        python utils/calculate_metrics.py --csv "${outdir}/${name}/results.csv"
-    done
-    echo "Successfully finished SpeechLMScore inference."
 fi

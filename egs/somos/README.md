@@ -1,1 +1,1 @@
-# SingMOS
+# SOMOS
