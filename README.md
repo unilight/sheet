@@ -36,7 +36,7 @@ You can use the `_id` argument to specify which pre-trained model to use. If not
 > Since SHEET is a on-going project, if you use our pre-trained model in you paper, it is suggested to specify the version. For instance: `SHEET SSL-MOS v0.1.0`, `SHEET SSL-MOS v0.2.5`, etc.
 
 > [!TIP]
-> You don't need to install sheet following the [installation instructions](#instsallation). However, you might need to install the following:
+> You don't need to install sheet following the [installation instructions](#installation). However, you might need to install the following:
 > ```
 > sheet-sqa
 > huggingface_hub
@@ -63,18 +63,18 @@ You can use the `_id` argument to specify which pre-trained model to use. If not
 1.5806346
 ```
 
-## Instsallation 
+## installation 
 
 Full installation is needed if your goal is to do **training**.
 
 ### Editable installation with virtualenv 
 
-You don't need to prepare an environment (using conda, etc.) first. The following commands will automatically construct a virtual environment in `tools/`. When you run the recipes, the scripts will automatically activate the virtual environment.
+First install the uv package manager [here](https://docs.astral.sh/uv/getting-started/installation/). Then, use the following commands to automatically construct a virtual environment in `tools/venv`. When you run the recipes, the scripts will automatically activate the virtual environment.
 
 ```bash
 git clone https://github.com/unilight/sheet.git
-cd sheet/tools
-make
+cd sheet
+bash install.sh train
 ```
 
 ## Information

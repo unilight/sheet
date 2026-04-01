@@ -6,13 +6,18 @@
 """torch.hub configuration."""
 
 dependencies = ["yaml", "torch", "torchaudio", "sheet", "huggingface_hub"]
-
+import sys
 import os
 import torch
 import torch.nn.functional as F
 import torchaudio
 import yaml
 from huggingface_hub import hf_hub_download
+
+repo_root = os.path.dirname(os.path.abspath(__file__))
+src_path = os.path.join(repo_root, "src")
+if src_path not in sys.path:
+    sys.path.insert(0, 0, src_path)
 
 FS = 16000
 resamplers = {}

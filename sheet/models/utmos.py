@@ -43,6 +43,7 @@ class UTMOS(torch.nn.Module):
         decoder_activation: str = "ReLU",
         output_type: str = "scalar",
         range_clipping: bool = True,
+        num_domains: int = None,
     ):
         super().__init__()  # this is needed! or else there will be an error.
         self.use_mean_listener = use_mean_listener
