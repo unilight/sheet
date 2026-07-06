@@ -13,8 +13,7 @@ authors = [
 ]
 
 dependencies = [
-    "torch==2.0.1",
-    "torchaudio==2.0.2",
+    "torch==2.8.0",
     "numpy==1.26.4",
     "h5py>=3.15.1",
     "pyyaml>=6.0.3",
@@ -24,6 +23,7 @@ dependencies = [
     "soxr>=1.0.0",
     "wheel>=0.45.1",
     "s3prl>=0.4.18",
+    "torchaudio==2.8",
 ]
 
 [project.optional-dependencies]
