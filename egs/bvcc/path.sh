@@ -6,7 +6,7 @@ if [ -e "${PRJ_ROOT}/tools/venv/bin/activate" ]; then
 fi
 
 MAIN_ROOT=$PWD/../..
-export PATH=$MAIN_ROOT/sheet/bin:$PATH
+export PATH=$MAIN_ROOT/src/sheet/bin:$PATH
 
 # python related
 export OMP_NUM_THREADS=1
